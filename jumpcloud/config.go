@@ -16,5 +16,5 @@ func (c *Config) Client() (interface{}, error) {
 	config.AddDefaultHeader("x-api-key", c.APIKey)
 
 	// Instantiate the API client
-	return jcapiv2.NewAPIClient(config), nil
+	return config, nil
 }
