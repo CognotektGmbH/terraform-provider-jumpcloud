@@ -1,8 +1,10 @@
 package jumpcloud
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -28,17 +30,13 @@ func resourceUserGroup() *schema.Resource {
 			"attributes": {
 				Type:     schema.TypeMap,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"ldap_groups": {
-							Computed: true,
-							Type:     schema.TypeString,
-						},
 						"posix_groups": {
 							Type:     schema.TypeString,
 							Optional: true,
-							ForceNew: true,
 						},
 					},
 				},
@@ -88,7 +86,7 @@ func resourceUserGroupRead(d *schema.ResourceData, m interface{}) error {
 		return nil
 	}
 
-	d.SetId(group.Id)
+	d.SetId(group.ID)
 	if err := d.Set("name", group.Name); err != nil {
 		return err
 	}
@@ -125,6 +123,30 @@ func trueUserGroupRead(config *jcapiv2.Configuration, id string) (ug *UserGroup,
 }
 
 func resourceUserGroupUpdate(d *schema.ResourceData, m interface{}) error {
+	config := m.(*jcapiv2.Configuration)
+
+	body := jcapiv2.UserGroupPost{Name: d.Get("name").(string)}
+	if attr, ok := expandAttributes(d.Get("attributes")); ok {
+		body.Attributes = attr
+	} else {
+		return errors.New("unable to update, attributes not expandable")
+	}
+	b, _ := json.Marshal(body)
+
+	req, err := http.NewRequest(http.MethodPut, config.BasePath+"/usergroups/"+d.Id(), bytes.NewBuffer(b))
+	if err != nil {
+		return err
+	}
+
+	req.Header.Add("x-api-key", config.DefaultHeader["x-api-key"])
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Accept", "application/json")
+
+	_, err = http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	// TODO: HTTP errors, generic request func?
 	return resourceUserGroupRead(d, m)
 }
 
