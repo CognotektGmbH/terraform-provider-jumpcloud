@@ -25,6 +25,24 @@ func resourceUserGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"attributes": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ldap_groups": {
+							Computed: true,
+							Type:     schema.TypeString,
+						},
+						"posix_groups": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+						},
+					},
+				},
+			},
 		},
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -36,16 +54,14 @@ func resourceUserGroupCreate(d *schema.ResourceData, m interface{}) error {
 	config := m.(*jcapiv2.Configuration)
 	client := jcapiv2.NewAPIClient(config)
 
+	body := jcapiv2.UserGroupPost{Name: d.Get("name").(string)}
+
+	if attr, ok := expandAttributes(d.Get("attributes")); ok {
+		body.Attributes = attr
+	}
+
 	req := map[string]interface{}{
-		"body": jcapiv2.UserGroupPost{
-			Name: d.Get("name").(string),
-			// Attributes: &jcapiv2.UserGroupPostAttributes{
-			// 	//	Note: PosixGroups cannot be edited after group creation, only first member of slice is considered
-			// 	PosixGroups: []jcapiv2.UserGroupPostAttributesPosixGroups{
-			// 		jcapiv2.UserGroupPostAttributesPosixGroups{Id: int32(posixID), Name: posixName},
-			// 	},
-			// },
-		},
+		"body":   body,
 		"xOrgId": d.Get("xorgid").(string),
 	}
 	group, res, err := client.UserGroupsApi.GroupsUserPost(context.TODO(), "", Accept, req)
@@ -76,9 +92,9 @@ func resourceUserGroupRead(d *schema.ResourceData, m interface{}) error {
 	if err := d.Set("name", group.Name); err != nil {
 		return err
 	}
-	// if err := d.Set("attributes", flattenAttributes(&group.Attributes)); err != nil {
-	// 	return err
-	// }
+	if err := d.Set("attributes", flattenAttributes(&group.Attributes)); err != nil {
+		return err
+	}
 
 	return nil
 }
