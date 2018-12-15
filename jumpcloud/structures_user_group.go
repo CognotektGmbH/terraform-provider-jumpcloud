@@ -10,7 +10,6 @@ import (
 
 func flattenAttributes(attr *Attributes) map[string]interface{} {
 	return map[string]interface{}{
-		"ldap_groups":  flattenLDAPGroups(attr.LDAPGroups),
 		"posix_groups": flattenPOSIXGroups(attr.POSIXGroups),
 	}
 }
@@ -19,14 +18,6 @@ func flattenPOSIXGroups(pg []jcapiv2.UserGroupPostAttributesPosixGroups) string 
 	out := []string{}
 	for _, v := range pg {
 		out = append(out, fmt.Sprintf("%d:%s", v.Id, v.Name))
-	}
-	return strings.Join(out, ",")
-}
-
-func flattenLDAPGroups(lg []LDAPGroup) string {
-	out := []string{}
-	for _, v := range lg {
-		out = append(out, v.Name)
 	}
 	return strings.Join(out, ",")
 }
