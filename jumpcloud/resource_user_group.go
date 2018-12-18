@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	jcapiv2 "github.com/TheJumpCloud/jcapi-go/v2"
+	"github.com/cognotektgmbh/terraform-provider-jumpcloud/util"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -65,7 +66,8 @@ func resourceUserGroupCreate(d *schema.ResourceData, m interface{}) error {
 
 	body := jcapiv2.UserGroupPost{Name: d.Get("name").(string)}
 
-	// For Attributes.PosixGroups, only the first member of the slice is considered by the JCAPI
+	// For Attributes.PosixGroups, only the first member of the slice
+	// is considered by the JCAPI
 	if attr, ok := expandAttributes(d.Get("attributes")); ok {
 		body.Attributes = attr
 	}
@@ -74,10 +76,12 @@ func resourceUserGroupCreate(d *schema.ResourceData, m interface{}) error {
 		"body":   body,
 		"xOrgId": d.Get("xorgid").(string),
 	}
-	group, res, err := client.UserGroupsApi.GroupsUserPost(context.TODO(), "", Accept, req)
+	group, res, err := client.UserGroupsApi.GroupsUserPost(context.TODO(),
+		"", headerAccept, req)
 	if err != nil {
 		// TODO: sort out error essentials
-		return fmt.Errorf("error creating user group %s: %s - response = %+v", (req["body"].(jcapiv2.UserGroupPost)).Name, err, res)
+		return fmt.Errorf("error creating user group %s: %s - response = %+v",
+			(req["body"].(jcapiv2.UserGroupPost)).Name, err, res)
 	}
 
 	d.SetId(group.Id)
@@ -87,7 +91,7 @@ func resourceUserGroupCreate(d *schema.ResourceData, m interface{}) error {
 func resourceUserGroupRead(d *schema.ResourceData, m interface{}) error {
 	config := m.(*jcapiv2.Configuration)
 
-	group, ok, err := trueUserGroupRead(config, d.Id())
+	group, ok, err := userGroupReadHelper(config, d.Id())
 	if err != nil {
 		return err
 	}
@@ -109,17 +113,13 @@ func resourceUserGroupRead(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func trueUserGroupRead(config *jcapiv2.Configuration, id string) (ug *UserGroup, ok bool, err error) {
-	req, err := http.NewRequest(http.MethodGet, config.BasePath+"/usergroups/"+id, nil)
-	if err != nil {
-		return
-	}
+func userGroupReadHelper(config *jcapiv2.Configuration, id string) (ug *UserGroup,
+	ok bool, err error) {
 
-	req.Header.Add("x-api-key", config.DefaultHeader["x-api-key"])
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Accept", "application/json")
-
-	res, err := http.DefaultClient.Do(req)
+	res, err := util.RequestHTTP(http.MethodGet,
+		config.DefaultHeader,
+		config.BasePath+"/usergroups/"+id,
+		nil)
 	if err != nil {
 		return
 	}
@@ -143,22 +143,19 @@ func resourceUserGroupUpdate(d *schema.ResourceData, m interface{}) error {
 	} else {
 		return errors.New("unable to update, attributes not expandable")
 	}
-	b, _ := json.Marshal(body)
-
-	req, err := http.NewRequest(http.MethodPut, config.BasePath+"/usergroups/"+d.Id(), bytes.NewBuffer(b))
+	b, err := json.Marshal(body)
 	if err != nil {
 		return err
 	}
 
-	req.Header.Add("x-api-key", config.DefaultHeader["x-api-key"])
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Accept", "application/json")
-
-	_, err = http.DefaultClient.Do(req)
+	_, err = util.RequestHTTP(http.MethodPatch,
+		config.DefaultHeader,
+		config.BasePath+"/usergroups/"+d.Id(),
+		bytes.NewBuffer(b))
 	if err != nil {
 		return err
 	}
-	// TODO: HTTP errors, generic request func?
+
 	return resourceUserGroupRead(d, m)
 }
 
@@ -166,10 +163,11 @@ func resourceUserGroupDelete(d *schema.ResourceData, m interface{}) error {
 	config := m.(*jcapiv2.Configuration)
 	client := jcapiv2.NewAPIClient(config)
 
-	res, err := client.UserGroupsApi.GroupsUserDelete(context.TODO(), d.Id(), "", Accept, nil)
+	res, err := client.UserGroupsApi.GroupsUserDelete(context.TODO(),
+		d.Id(), "", headerAccept, nil)
 	if err != nil {
 		// TODO: sort out error essentials
-		return fmt.Errorf("error deleting user group: %s - response = %+v", err, res)
+		return fmt.Errorf("error deleting user group: %s-response = %+v", err, res)
 	}
 	d.SetId("")
 	return nil
