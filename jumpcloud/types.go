@@ -2,7 +2,7 @@ package jumpcloud
 
 import jcapiv2 "github.com/TheJumpCloud/jcapi-go/v2"
 
-// UserGroup is like github.com/TheJumpCloud/jcapi-go/v2.UserGroup but with Attributes and go best practices
+// UserGroup is like jcapiv2.UserGroup with Attributes
 type UserGroup struct {
 	// ID uniquely identifies a User Group.
 	ID string `json:"id,omitempty"`
