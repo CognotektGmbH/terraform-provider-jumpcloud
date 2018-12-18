@@ -1,7 +1,6 @@
 package jumpcloud
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -9,7 +8,6 @@ import (
 	"net/http"
 
 	jcapiv2 "github.com/TheJumpCloud/jcapi-go/v2"
-	"github.com/cognotektgmbh/terraform-provider-jumpcloud/util"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -32,6 +30,7 @@ func resourceUserGroup() *schema.Resource {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"posix_groups": {
@@ -88,6 +87,10 @@ func resourceUserGroupCreate(d *schema.ResourceData, m interface{}) error {
 	return resourceUserGroupRead(d, m)
 }
 
+// resourceUserGroupRead uses a helper function that consumes the
+// JC's HTTP API directly; the groups' attributes need to be kept in state
+// as they are required for resourceUserGroupUpdate and the current
+// implementation of the JC SDK doesn't support their retrieval
 func resourceUserGroupRead(d *schema.ResourceData, m interface{}) error {
 	config := m.(*jcapiv2.Configuration)
 
@@ -116,10 +119,17 @@ func resourceUserGroupRead(d *schema.ResourceData, m interface{}) error {
 func userGroupReadHelper(config *jcapiv2.Configuration, id string) (ug *UserGroup,
 	ok bool, err error) {
 
-	res, err := util.RequestHTTP(http.MethodGet,
-		config.DefaultHeader,
-		config.BasePath+"/usergroups/"+id,
-		nil)
+	req, err := http.NewRequest(http.MethodGet,
+		config.BasePath+"/usergroups/"+id, nil)
+	if err != nil {
+		return
+	}
+
+	req.Header.Add("x-api-key", config.DefaultHeader["x-api-key"])
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Accept", "application/json")
+
+	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return
 	}
@@ -136,6 +146,7 @@ func userGroupReadHelper(config *jcapiv2.Configuration, id string) (ug *UserGrou
 
 func resourceUserGroupUpdate(d *schema.ResourceData, m interface{}) error {
 	config := m.(*jcapiv2.Configuration)
+	client := jcapiv2.NewAPIClient(config)
 
 	body := jcapiv2.UserGroupPost{Name: d.Get("name").(string)}
 	if attr, ok := expandAttributes(d.Get("attributes")); ok {
@@ -143,17 +154,18 @@ func resourceUserGroupUpdate(d *schema.ResourceData, m interface{}) error {
 	} else {
 		return errors.New("unable to update, attributes not expandable")
 	}
-	b, err := json.Marshal(body)
-	if err != nil {
-		return err
-	}
 
-	_, err = util.RequestHTTP(http.MethodPatch,
-		config.DefaultHeader,
-		config.BasePath+"/usergroups/"+d.Id(),
-		bytes.NewBuffer(b))
+	req := map[string]interface{}{
+		"body":   body,
+		"xOrgId": d.Get("xorgid").(string),
+	}
+	// behaves like PUT, will fail if
+	// attributes.posixGroups isn't sent, see GODOC
+	_, res, err := client.UserGroupsApi.GroupsUserPatch(context.TODO(),
+		d.Id(), "", headerAccept, req)
 	if err != nil {
-		return err
+		// TODO: sort out error essentials
+		return fmt.Errorf("error deleting user group:%s; response = %+v", err, res)
 	}
 
 	return resourceUserGroupRead(d, m)
@@ -167,7 +179,7 @@ func resourceUserGroupDelete(d *schema.ResourceData, m interface{}) error {
 		d.Id(), "", headerAccept, nil)
 	if err != nil {
 		// TODO: sort out error essentials
-		return fmt.Errorf("error deleting user group: %s-response = %+v", err, res)
+		return fmt.Errorf("error deleting user group:%s; response = %+v", err, res)
 	}
 	d.SetId("")
 	return nil
