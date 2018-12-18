@@ -5,3 +5,5 @@ deps:
 	dep ensure
 update-deps:
 	dep ensure -update
+build: deps
+	go build .
