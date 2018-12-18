@@ -40,6 +40,7 @@ func expandAttributes(attr interface{}) (out *jcapiv2.UserGroupPostAttributes, o
 	// 	enableSamba, _ = strconv.ParseBool(sambaStr)
 	// }
 
+	// TODO: empty string? nil?
 	posixStr, ok := mapAttr["posix_groups"].(string)
 	if !ok {
 		return
