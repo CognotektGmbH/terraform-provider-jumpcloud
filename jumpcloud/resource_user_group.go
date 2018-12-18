@@ -31,13 +31,24 @@ func resourceUserGroup() *schema.Resource {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Computed: true,
-				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"posix_groups": {
-							Type:     schema.TypeString,
+							Type: schema.TypeString,
+							// PosixGroups cannot be edited after group creation.
+							ForceNew: true,
 							Optional: true,
 						},
+						// enable_samba has a more complicated lifecycle,
+						// Commenting out for now as it is ignored in CRU by the JCAPI
+						// From Jumpcloud UI:
+						// Samba Authentication must be configured in the
+						// JumpCloud LDAP Directory and LDAP sync must be enabled
+						// on this group before Samba Authentication can be enabled.
+						// "enable_samba": {
+						// 	Type:     schema.TypeBool,
+						// 	Optional: true,
+						// },
 					},
 				},
 			},
@@ -54,6 +65,7 @@ func resourceUserGroupCreate(d *schema.ResourceData, m interface{}) error {
 
 	body := jcapiv2.UserGroupPost{Name: d.Get("name").(string)}
 
+	// For Attributes.PosixGroups, only the first member of the slice is considered by the JCAPI
 	if attr, ok := expandAttributes(d.Get("attributes")); ok {
 		body.Attributes = attr
 	}

@@ -11,12 +11,6 @@ type UserGroup struct {
 	Type string `json:"type,omitempty"`
 
 	// Display name of a User Group.
-	Name       string     `json:"name,omitempty"`
-	Attributes Attributes `json:"attributes,omitempty"`
-}
-
-// Attributes holds UserGroup properties relevant for updates
-type Attributes struct {
-	POSIXGroups []jcapiv2.UserGroupPostAttributesPosixGroups `json:"posixGroups,omitempty"`
-	// SambaEnabled bool                                         `json:"sambaEnable,omitempty"`
+	Name       string                          `json:"name,omitempty"`
+	Attributes jcapiv2.UserGroupPostAttributes `json:"attributes,omitempty"`
 }
