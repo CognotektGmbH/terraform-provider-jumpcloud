@@ -1,5 +1,7 @@
 package jumpcloud
 
+// see https://www.terraform.io/docs/plugins/provider.html#provider
+
 import (
 	"testing"
 )

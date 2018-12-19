@@ -42,7 +42,7 @@ func (s *ResourceUserGroupSuite) TestTrueUserGroupRead() {
 			BasePath: testServer.URL,
 		}
 
-		ug, ok, err := trueUserGroupRead(config, "id")
+		ug, ok, err := userGroupReadHelper(config, "id")
 		s.A.Equal(c.OK, ok)
 		s.A.Equal(c.UserGroupNil, ug == nil)
 		s.A.Equal(c.ErrorNil, err == nil)

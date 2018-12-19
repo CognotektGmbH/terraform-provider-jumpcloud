@@ -2,6 +2,9 @@ package jumpcloud
 
 import "github.com/hashicorp/terraform/helper/schema"
 
+// Provider instantiates a terraform provider for Jumpcloud
+// This includes all operations on all supported resources and
+// global Jumpcloud parameters
 func Provider() *schema.Provider {
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{

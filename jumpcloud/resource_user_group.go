@@ -1,7 +1,6 @@
 package jumpcloud
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -35,9 +34,21 @@ func resourceUserGroup() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"posix_groups": {
-							Type:     schema.TypeString,
+							Type: schema.TypeString,
+							// PosixGroups cannot be edited after group creation.
+							ForceNew: true,
 							Optional: true,
 						},
+						// enable_samba has a more complicated lifecycle,
+						// Commenting out for now as it is ignored in CRU by the JCAPI
+						// From Jumpcloud UI:
+						// Samba Authentication must be configured in the
+						// JumpCloud LDAP Directory and LDAP sync must be enabled
+						// on this group before Samba Authentication can be enabled.
+						// "enable_samba": {
+						// 	Type:     schema.TypeBool,
+						// 	Optional: true,
+						// },
 					},
 				},
 			},
@@ -54,6 +65,8 @@ func resourceUserGroupCreate(d *schema.ResourceData, m interface{}) error {
 
 	body := jcapiv2.UserGroupPost{Name: d.Get("name").(string)}
 
+	// For Attributes.PosixGroups, only the first member of the slice
+	// is considered by the JCAPI
 	if attr, ok := expandAttributes(d.Get("attributes")); ok {
 		body.Attributes = attr
 	}
@@ -62,20 +75,26 @@ func resourceUserGroupCreate(d *schema.ResourceData, m interface{}) error {
 		"body":   body,
 		"xOrgId": d.Get("xorgid").(string),
 	}
-	group, res, err := client.UserGroupsApi.GroupsUserPost(context.TODO(), "", Accept, req)
+	group, res, err := client.UserGroupsApi.GroupsUserPost(context.TODO(),
+		"", headerAccept, req)
 	if err != nil {
 		// TODO: sort out error essentials
-		return fmt.Errorf("error creating user group %s: %s - response = %+v", (req["body"].(jcapiv2.UserGroupPost)).Name, err, res)
+		return fmt.Errorf("error creating user group %s: %s - response = %+v",
+			(req["body"].(jcapiv2.UserGroupPost)).Name, err, res)
 	}
 
 	d.SetId(group.Id)
 	return resourceUserGroupRead(d, m)
 }
 
+// resourceUserGroupRead uses a helper function that consumes the
+// JC's HTTP API directly; the groups' attributes need to be kept in state
+// as they are required for resourceUserGroupUpdate and the current
+// implementation of the JC SDK doesn't support their retrieval
 func resourceUserGroupRead(d *schema.ResourceData, m interface{}) error {
 	config := m.(*jcapiv2.Configuration)
 
-	group, ok, err := trueUserGroupRead(config, d.Id())
+	group, ok, err := userGroupReadHelper(config, d.Id())
 	if err != nil {
 		return err
 	}
@@ -97,8 +116,11 @@ func resourceUserGroupRead(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func trueUserGroupRead(config *jcapiv2.Configuration, id string) (ug *UserGroup, ok bool, err error) {
-	req, err := http.NewRequest(http.MethodGet, config.BasePath+"/usergroups/"+id, nil)
+func userGroupReadHelper(config *jcapiv2.Configuration, id string) (ug *UserGroup,
+	ok bool, err error) {
+
+	req, err := http.NewRequest(http.MethodGet,
+		config.BasePath+"/usergroups/"+id, nil)
 	if err != nil {
 		return
 	}
@@ -124,6 +146,7 @@ func trueUserGroupRead(config *jcapiv2.Configuration, id string) (ug *UserGroup,
 
 func resourceUserGroupUpdate(d *schema.ResourceData, m interface{}) error {
 	config := m.(*jcapiv2.Configuration)
+	client := jcapiv2.NewAPIClient(config)
 
 	body := jcapiv2.UserGroupPost{Name: d.Get("name").(string)}
 	if attr, ok := expandAttributes(d.Get("attributes")); ok {
@@ -131,22 +154,20 @@ func resourceUserGroupUpdate(d *schema.ResourceData, m interface{}) error {
 	} else {
 		return errors.New("unable to update, attributes not expandable")
 	}
-	b, _ := json.Marshal(body)
 
-	req, err := http.NewRequest(http.MethodPut, config.BasePath+"/usergroups/"+d.Id(), bytes.NewBuffer(b))
+	req := map[string]interface{}{
+		"body":   body,
+		"xOrgId": d.Get("xorgid").(string),
+	}
+	// behaves like PUT, will fail if
+	// attributes.posixGroups isn't sent, see GODOC
+	_, res, err := client.UserGroupsApi.GroupsUserPatch(context.TODO(),
+		d.Id(), "", headerAccept, req)
 	if err != nil {
-		return err
+		// TODO: sort out error essentials
+		return fmt.Errorf("error deleting user group:%s; response = %+v", err, res)
 	}
 
-	req.Header.Add("x-api-key", config.DefaultHeader["x-api-key"])
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Accept", "application/json")
-
-	_, err = http.DefaultClient.Do(req)
-	if err != nil {
-		return err
-	}
-	// TODO: HTTP errors, generic request func?
 	return resourceUserGroupRead(d, m)
 }
 
@@ -154,10 +175,11 @@ func resourceUserGroupDelete(d *schema.ResourceData, m interface{}) error {
 	config := m.(*jcapiv2.Configuration)
 	client := jcapiv2.NewAPIClient(config)
 
-	res, err := client.UserGroupsApi.GroupsUserDelete(context.TODO(), d.Id(), "", Accept, nil)
+	res, err := client.UserGroupsApi.GroupsUserDelete(context.TODO(),
+		d.Id(), "", headerAccept, nil)
 	if err != nil {
 		// TODO: sort out error essentials
-		return fmt.Errorf("error deleting user group: %s - response = %+v", err, res)
+		return fmt.Errorf("error deleting user group:%s; response = %+v", err, res)
 	}
 	d.SetId("")
 	return nil

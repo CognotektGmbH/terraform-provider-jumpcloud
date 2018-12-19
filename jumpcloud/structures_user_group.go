@@ -1,5 +1,7 @@
 package jumpcloud
 
+// see https://www.terraform.io/docs/extend/writing-custom-providers.html#implementing-a-more-complex-read
+
 import (
 	"fmt"
 	"strconv"
@@ -8,13 +10,14 @@ import (
 	jcapiv2 "github.com/TheJumpCloud/jcapi-go/v2"
 )
 
-func flattenAttributes(attr *Attributes) map[string]interface{} {
+func flattenAttributes(attr *jcapiv2.UserGroupPostAttributes) map[string]interface{} {
 	return map[string]interface{}{
-		"posix_groups": flattenPOSIXGroups(attr.POSIXGroups),
+		"posix_groups": flattenPosixGroups(attr.PosixGroups),
+		// "enable_samba": fmt.Sprintf("%t", attr.SambaEnabled),
 	}
 }
 
-func flattenPOSIXGroups(pg []jcapiv2.UserGroupPostAttributesPosixGroups) string {
+func flattenPosixGroups(pg []jcapiv2.UserGroupPostAttributesPosixGroups) string {
 	out := []string{}
 	for _, v := range pg {
 		out = append(out, fmt.Sprintf("%d:%s", v.Id, v.Name))
@@ -22,7 +25,6 @@ func flattenPOSIXGroups(pg []jcapiv2.UserGroupPostAttributesPosixGroups) string 
 	return strings.Join(out, ",")
 }
 
-//	Note: PosixGroups cannot be edited after group creation, only first member of slice is considered
 func expandAttributes(attr interface{}) (out *jcapiv2.UserGroupPostAttributes, ok bool) {
 	if attr == nil {
 		return
@@ -31,6 +33,14 @@ func expandAttributes(attr interface{}) (out *jcapiv2.UserGroupPostAttributes, o
 	if !ok {
 		return
 	}
+
+	// var enableSamba bool
+	// sambaStr, ok := mapAttr["enable_samba"].(string)
+	// if ok {
+	// 	enableSamba, _ = strconv.ParseBool(sambaStr)
+	// }
+
+	// TODO: empty string? nil?
 	posixStr, ok := mapAttr["posix_groups"].(string)
 	if !ok {
 		return
@@ -57,5 +67,8 @@ func expandAttributes(attr interface{}) (out *jcapiv2.UserGroupPostAttributes, o
 		return
 	}
 
-	return &jcapiv2.UserGroupPostAttributes{PosixGroups: posixGroups}, true
+	return &jcapiv2.UserGroupPostAttributes{
+		PosixGroups: posixGroups,
+		// SambaEnabled: enableSamba,
+	}, true
 }
