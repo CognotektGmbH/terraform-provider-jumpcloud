@@ -2,8 +2,8 @@ package jumpcloud
 
 import (
 	"context"
-	//    "net/http"
 	"fmt"
+	"net/http"
 
 	jcapiv1 "github.com/TheJumpCloud/jcapi-go/v1"
 	jcapiv2 "github.com/TheJumpCloud/jcapi-go/v2"
@@ -42,6 +42,8 @@ func resourceUser() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
+			// Currently, only the options necessary for our use.case are implemented
+			// JumopCloud offers a lot more
 		},
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -49,19 +51,23 @@ func resourceUser() *schema.Resource {
 	}
 }
 
-func resourceUserCreate(d *schema.ResourceData, m interface{}) error {
-	configv2 := m.(*jcapiv2.Configuration)
-	configv1 := jcapiv1.NewConfiguration()
-	configv1.AddDefaultHeader("x-api-key", configv2.DefaultHeader["x-api-key"])
-
-	client := jcapiv1.NewAPIClient(configv1)
-
-	var payload jcapiv1.Systemuserputpost
+func populateUserPayload(payload *jcapiv1.Systemuserputpost, d *schema.ResourceData) {
 	payload.Username = d.Get("username").(string)
 	payload.Email = d.Get("email").(string)
 	payload.Firstname = d.Get("firstname").(string)
 	payload.Lastname = d.Get("lastname").(string)
 	payload.EnableUserPortalMultifactor = d.Get("enable_mfa").(bool)
+}
+
+func resourceUserCreate(d *schema.ResourceData, m interface{}) error {
+	// We receive a v2config but need a v1config to continue. So, we take the only
+	// preloaded element (the x-api-key) and populate the v1config with it.
+	configv1 := jcapiv1.NewConfiguration()
+	configv1.AddDefaultHeader("x-api-key", m.(*jcapiv2.Configuration).DefaultHeader["x-api-key"])
+	client := jcapiv1.NewAPIClient(configv1)
+
+	var payload jcapiv1.Systemuserputpost
+	populateUserPayload(&payload, d)
 
 	req := map[string]interface{}{
 		"body":   payload,
@@ -77,27 +83,23 @@ func resourceUserCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceUserRead(d *schema.ResourceData, m interface{}) error {
-	configv2 := m.(*jcapiv2.Configuration)
 	configv1 := jcapiv1.NewConfiguration()
-	configv1.AddDefaultHeader("x-api-key", configv2.DefaultHeader["x-api-key"])
-
+	configv1.AddDefaultHeader("x-api-key", m.(*jcapiv2.Configuration).DefaultHeader["x-api-key"])
 	client := jcapiv1.NewAPIClient(configv1)
 
-	res, _, err := client.SystemusersApi.SystemusersGet(context.TODO(),
+	res, httpresponse, err := client.SystemusersApi.SystemusersGet(context.TODO(),
 		d.Id(), "", "", nil)
 
 	if err != nil {
 		return err
 	}
 
-	// Need to understand why we need this
-	/*
-		if !ok {
-			// not found
-			d.SetId("")
-			return nil
-		}
-	*/
+	// If the object does not exist in our infrastructure
+	if httpresponse.StatusCode == http.StatusNotFound {
+		d.SetId("")
+		return nil
+	}
+
 	d.SetId(res.Id)
 
 	if err := d.Set("username", res.Username); err != nil {
@@ -112,7 +114,6 @@ func resourceUserRead(d *schema.ResourceData, m interface{}) error {
 	if err := d.Set("lastname", res.Lastname); err != nil {
 		return err
 	}
-
 	if err := d.Set("enable_mfa", res.EnableUserPortalMultifactor); err != nil {
 		return err
 	}
@@ -120,18 +121,12 @@ func resourceUserRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceUserUpdate(d *schema.ResourceData, m interface{}) error {
-	configv2 := m.(*jcapiv2.Configuration)
 	configv1 := jcapiv1.NewConfiguration()
-	configv1.AddDefaultHeader("x-api-key", configv2.DefaultHeader["x-api-key"])
-
+	configv1.AddDefaultHeader("x-api-key", m.(*jcapiv2.Configuration).DefaultHeader["x-api-key"])
 	client := jcapiv1.NewAPIClient(configv1)
 
-	var payload jcapiv1.Systemuserput
-	payload.Username = d.Get("username").(string)
-	payload.Email = d.Get("email").(string)
-	payload.Firstname = d.Get("firstname").(string)
-	payload.Lastname = d.Get("lastname").(string)
-	payload.EnableUserPortalMultifactor = d.Get("enable_mfa").(bool)
+	var payload jcapiv1.Systemuserputpost
+	populateUserPayload(&payload, d)
 
 	req := map[string]interface{}{
 		"body":   payload,
@@ -146,10 +141,8 @@ func resourceUserUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceUserDelete(d *schema.ResourceData, m interface{}) error {
-	configv2 := m.(*jcapiv2.Configuration)
 	configv1 := jcapiv1.NewConfiguration()
-	configv1.AddDefaultHeader("x-api-key", configv2.DefaultHeader["x-api-key"])
-
+	configv1.AddDefaultHeader("x-api-key", m.(*jcapiv2.Configuration).DefaultHeader["x-api-key"])
 	client := jcapiv1.NewAPIClient(configv1)
 
 	res, _, err := client.SystemusersApi.SystemusersDelete(context.TODO(),
