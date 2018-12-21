@@ -3,7 +3,6 @@ package jumpcloud
 import (
 	"context"
 	"fmt"
-	"net/http"
 
 	jcapiv1 "github.com/TheJumpCloud/jcapi-go/v1"
 	jcapiv2 "github.com/TheJumpCloud/jcapi-go/v2"
@@ -51,13 +50,22 @@ func resourceUser() *schema.Resource {
 	}
 }
 
-func populateUserPayload(payload *jcapiv1.Systemuserputpost, d *schema.ResourceData) {
-	payload.Username = d.Get("username").(string)
-	payload.Email = d.Get("email").(string)
-	payload.Firstname = d.Get("firstname").(string)
-	payload.Lastname = d.Get("lastname").(string)
-	payload.EnableUserPortalMultifactor = d.Get("enable_mfa").(bool)
-}
+/*
+func populateUserPayload(d *schema.ResourceData) *jcapiv1.Systemuserputpost {
+	//payload.Username = d.Get("username").(string)
+	//payload.Email = d.Get("email").(string)
+//	payload.Firstname = d.Get("firstname").(string)
+	//payload.Lastname = d.Get("lastname").(string)
+	//payload.EnableUserPortalMultifactor = d.Get("enable_mfa").(bool)
+
+	return &jcapiv1.Systemuserputpost{
+		Username:                    d.Get("username").(string),
+		Email:                       d.Get("email").(string),
+		Firstname:                   d.Get("firstname").(string),
+		Lastname:                    d.Get("lastname").(string),
+		EnableUserPortalMultifactor: d.Get("enable_mfa").(bool),
+	}
+}*/
 
 func resourceUserCreate(d *schema.ResourceData, m interface{}) error {
 	// We receive a v2config but need a v1config to continue. So, we take the only
@@ -67,7 +75,11 @@ func resourceUserCreate(d *schema.ResourceData, m interface{}) error {
 	client := jcapiv1.NewAPIClient(configv1)
 
 	var payload jcapiv1.Systemuserputpost
-	populateUserPayload(&payload, d)
+	payload.Username = d.Get("username").(string)
+	payload.Email = d.Get("email").(string)
+	payload.Firstname = d.Get("firstname").(string)
+	payload.Lastname = d.Get("lastname").(string)
+	payload.EnableUserPortalMultifactor = d.Get("enable_mfa").(bool)
 
 	req := map[string]interface{}{
 		"body":   payload,
@@ -87,17 +99,17 @@ func resourceUserRead(d *schema.ResourceData, m interface{}) error {
 	configv1.AddDefaultHeader("x-api-key", m.(*jcapiv2.Configuration).DefaultHeader["x-api-key"])
 	client := jcapiv1.NewAPIClient(configv1)
 
-	res, httpresponse, err := client.SystemusersApi.SystemusersGet(context.TODO(),
+	res, _, err := client.SystemusersApi.SystemusersGet(context.TODO(),
 		d.Id(), "", "", nil)
 
+	// If the object does not exist in our infrastructure, we unset the ID
+	// Unfortunately, the http request returns 200 even if the resource does not exist
 	if err != nil {
+		if err.Error() == "EOF" {
+			d.SetId("")
+			return nil
+		}
 		return err
-	}
-
-	// If the object does not exist in our infrastructure
-	if httpresponse.StatusCode == http.StatusNotFound {
-		d.SetId("")
-		return nil
 	}
 
 	d.SetId(res.Id)
@@ -125,8 +137,14 @@ func resourceUserUpdate(d *schema.ResourceData, m interface{}) error {
 	configv1.AddDefaultHeader("x-api-key", m.(*jcapiv2.Configuration).DefaultHeader["x-api-key"])
 	client := jcapiv1.NewAPIClient(configv1)
 
-	var payload jcapiv1.Systemuserputpost
-	populateUserPayload(&payload, d)
+	// The code fomr the create function is almost identical, but the structure is different :
+	// jcapiv1.Systemuserput != jcapiv1.Systemuserputpost
+	var payload jcapiv1.Systemuserput
+	payload.Username = d.Get("username").(string)
+	payload.Email = d.Get("email").(string)
+	payload.Firstname = d.Get("firstname").(string)
+	payload.Lastname = d.Get("lastname").(string)
+	payload.EnableUserPortalMultifactor = d.Get("enable_mfa").(bool)
 
 	req := map[string]interface{}{
 		"body":   payload,
