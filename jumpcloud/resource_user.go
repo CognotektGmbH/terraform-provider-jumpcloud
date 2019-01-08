@@ -41,8 +41,8 @@ func resourceUser() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			// Currently, only the options necessary for our use.case are implemented
-			// JumopCloud offers a lot more
+			// Currently, only the options necessary for our use case are implemented
+			// JumpCloud offers a lot more
 		},
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
