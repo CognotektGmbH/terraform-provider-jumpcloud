@@ -74,12 +74,13 @@ func resourceUserCreate(d *schema.ResourceData, m interface{}) error {
 	configv1.AddDefaultHeader("x-api-key", m.(*jcapiv2.Configuration).DefaultHeader["x-api-key"])
 	client := jcapiv1.NewAPIClient(configv1)
 
-	var payload jcapiv1.Systemuserputpost
-	payload.Username = d.Get("username").(string)
-	payload.Email = d.Get("email").(string)
-	payload.Firstname = d.Get("firstname").(string)
-	payload.Lastname = d.Get("lastname").(string)
-	payload.EnableUserPortalMultifactor = d.Get("enable_mfa").(bool)
+	payload := jcapiv1.Systemuserputpost{
+		Username:                    d.Get("username").(string),
+		Email:                       d.Get("email").(string),
+		Firstname:                   d.Get("firstname").(string),
+		Lastname:                    d.Get("lastname").(string),
+		EnableUserPortalMultifactor: d.Get("enable_mfa").(bool),
+	}
 
 	req := map[string]interface{}{
 		"body":   payload,
@@ -137,14 +138,15 @@ func resourceUserUpdate(d *schema.ResourceData, m interface{}) error {
 	configv1.AddDefaultHeader("x-api-key", m.(*jcapiv2.Configuration).DefaultHeader["x-api-key"])
 	client := jcapiv1.NewAPIClient(configv1)
 
-	// The code fomr the create function is almost identical, but the structure is different :
+	// The code from the create function is almost identical, but the structure is different :
 	// jcapiv1.Systemuserput != jcapiv1.Systemuserputpost
-	var payload jcapiv1.Systemuserput
-	payload.Username = d.Get("username").(string)
-	payload.Email = d.Get("email").(string)
-	payload.Firstname = d.Get("firstname").(string)
-	payload.Lastname = d.Get("lastname").(string)
-	payload.EnableUserPortalMultifactor = d.Get("enable_mfa").(bool)
+	payload := jcapiv1.Systemuserput{
+		Username:                    d.Get("username").(string),
+		Email:                       d.Get("email").(string),
+		Firstname:                   d.Get("firstname").(string),
+		Lastname:                    d.Get("lastname").(string),
+		EnableUserPortalMultifactor: d.Get("enable_mfa").(bool),
+	}
 
 	req := map[string]interface{}{
 		"body":   payload,
