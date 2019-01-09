@@ -25,3 +25,6 @@ make build
 ## Using the provider
 
 If you're building the provider, follow the instructions to [install it as a plugin.](https://www.terraform.io/docs/plugins/basics.html#installing-a-plugin) After placing it into your plugins directory,  run `terraform init` to initialize it.
+
+## Tips 
+* When importing a resource, you need the Jumpcloud ID. It can either be retrieved via the API or through the UI : When selecting a resource, the ID is part of URL.
