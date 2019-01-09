@@ -16,8 +16,9 @@ func Provider() *schema.Provider {
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"jumpcloud_user_group": resourceUserGroup(),
-			"jumpcloud_user":       resourceUser(),
+			"jumpcloud_user_group":            resourceUserGroup(),
+			"jumpcloud_user":                  resourceUser(),
+			"jumpcloud_user_group_membership": resourceUserGroupMembership(),
 		},
 		ConfigureFunc: providerConfigure,
 	}
