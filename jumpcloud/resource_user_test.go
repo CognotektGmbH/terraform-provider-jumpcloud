@@ -2,10 +2,11 @@ package jumpcloud
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
 	"os"
 	"testing"
+
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
 )
 
 func TestAccUser(t *testing.T) {
@@ -17,7 +18,7 @@ func TestAccUser(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				// This test simply aplys a user with the config from testAccUser
+				// This test simply applys a user with the config from testAccUser
 				// and checks for the correct username and email in the state
 				// The resource is destroyed afterwards via the framework
 				Config: testAccUser(rName),
@@ -34,7 +35,7 @@ func TestAccUser(t *testing.T) {
 // in the testing environment
 func testAccPreCheck(t *testing.T) {
 	if v := os.Getenv("JUMPCLOUD_API_KEY"); v == "" {
-		t.Fatal("JUMPCLOUD_API_KEY= must be set for acceptance tests")
+		t.Fatal("JUMPCLOUD_API_KEY= must be set for the acceptance tests")
 	}
 }
 

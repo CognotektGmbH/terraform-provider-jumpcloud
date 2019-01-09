@@ -7,3 +7,5 @@ update-deps:
 	dep ensure -update
 build: deps
 	go build .
+testacc: deps
+	TF_ACC=true go test -v ./...
