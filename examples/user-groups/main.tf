@@ -20,3 +20,9 @@ resource "jumpcloud_user" "test_user2" {
     email = "testuser2@testorg.org"
     enable_mfa = false
 }
+
+
+resource "jumpcloud_user_group_membership" "test_membership" {
+    userid = "${jumpcloud_user.test_user1.id}"
+    groupid = "${jumpcloud_user_group.test_group.id}"
+}
