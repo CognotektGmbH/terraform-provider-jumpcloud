@@ -2,7 +2,6 @@ package jumpcloud
 
 import (
 	"context"
-	//	"fmt"
 
 	jcapiv2 "github.com/TheJumpCloud/jcapi-go/v2"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -13,7 +12,7 @@ func resourceUserGroupMembership() *schema.Resource {
 		Create: resourceUserGroupMembershipCreate,
 		Read:   resourceUserGroupMembershipRead,
 		// We must  not have an update routine as the association cannot be updated
-		// Any change in the group ID or user ID forces a recreation of the resource
+		// Any change in one of the elements forces a recreation of the resource
 		Update: nil,
 		Delete: resourceUserGroupMembershipDelete,
 		Schema: map[string]*schema.Schema{
@@ -33,18 +32,18 @@ func resourceUserGroupMembership() *schema.Resource {
 				ForceNew: true,
 			},
 		},
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
-		},
+		// We can't use the regular importer (ImportStatePassthrough as it requires
+		// the read to be done ONLY based on the ID of the resource.
+		// We would need to write a function that derives the group ID and user ID
+		//from the membership ID, but that is for later.
+		Importer: nil,
 	}
 }
 
-func resourceUserGroupMembershipCreate(d *schema.ResourceData, m interface{}) error {
-	config := m.(*jcapiv2.Configuration)
-	client := jcapiv2.NewAPIClient(config)
-
+func modifyUserGroupMembership(client *jcapiv2.APIClient,
+	d *schema.ResourceData, action string) error {
 	payload := jcapiv2.UserGroupMembersReq{
-		Op:    "add",
+		Op:    action,
 		Type_: "user",
 		Id:    d.Get("userid").(string),
 	}
@@ -59,7 +58,17 @@ func resourceUserGroupMembershipCreate(d *schema.ResourceData, m interface{}) er
 	if err != nil {
 		return err
 	}
+	return nil
+}
 
+func resourceUserGroupMembershipCreate(d *schema.ResourceData, m interface{}) error {
+	config := m.(*jcapiv2.Configuration)
+	client := jcapiv2.NewAPIClient(config)
+
+	err := modifyUserGroupMembership(client, d, "add")
+	if err != nil {
+		return err
+	}
 	return resourceUserGroupMembershipRead(d, m)
 }
 
@@ -82,6 +91,7 @@ func resourceUserGroupMembershipRead(d *schema.ResourceData, m interface{}) erro
 			return nil
 		}
 	}
+	// Element does not exist in actual Infrastructure, hence unsetting the ID
 	d.SetId("")
 	return nil
 }
@@ -90,17 +100,5 @@ func resourceUserGroupMembershipDelete(d *schema.ResourceData, m interface{}) er
 	config := m.(*jcapiv2.Configuration)
 	client := jcapiv2.NewAPIClient(config)
 
-	payload := jcapiv2.UserGroupMembersReq{
-		Op:    "remove",
-		Type_: "user",
-		Id:    d.Get("userid").(string),
-	}
-
-	req := map[string]interface{}{
-		"body":   payload,
-		"xOrgId": d.Get("xorgid").(string),
-	}
-	client.UserGroupMembersMembershipApi.GraphUserGroupMembersPost(
-		context.TODO(), d.Get("groupid").(string), "", "", req)
-	return nil
+	return modifyUserGroupMembership(client, d, "remove")
 }
