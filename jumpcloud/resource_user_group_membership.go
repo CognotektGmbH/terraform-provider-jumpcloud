@@ -2,6 +2,8 @@ package jumpcloud
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	jcapiv2 "github.com/TheJumpCloud/jcapi-go/v2"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -11,7 +13,7 @@ func resourceUserGroupMembership() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceUserGroupMembershipCreate,
 		Read:   resourceUserGroupMembershipRead,
-		// We must  not have an update routine as the association cannot be updated
+		// We must not have an update routine as the association cannot be updated.
 		// Any change in one of the elements forces a recreation of the resource
 		Update: nil,
 		Delete: resourceUserGroupMembershipDelete,
@@ -32,12 +34,21 @@ func resourceUserGroupMembership() *schema.Resource {
 				ForceNew: true,
 			},
 		},
-		// We can't use the regular importer (ImportStatePassthrough as it requires
-		// the read to be done ONLY based on the ID of the resource.
-		// We would need to write a function that derives the group ID and user ID
-		//from the membership ID, but that is for later.
-		Importer: nil,
+		Importer: &schema.ResourceImporter{
+			State: UserGroupMembershipImporter,
+		},
 	}
+}
+
+// We cannot use the regular importer as it calls the read function ONLY with the ID field being
+// populated.- In our case, we need the group Id and user Is to do the read - But since our
+// artificial resource ID is simply the combination of user ID group ID seperated by  a'/'  ,
+// we can derive both vautes during our import process'
+func UserGroupMembershipImporter(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+	s := strings.Split(d.Id(), "/")
+	d.Set("groupid", s[0])
+	d.Set("userid", s[1])
+	return []*schema.ResourceData{d}, nil
 }
 
 func modifyUserGroupMembership(client *jcapiv2.APIClient,
