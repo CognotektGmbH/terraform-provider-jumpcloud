@@ -2,7 +2,6 @@ package jumpcloud
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	jcapiv2 "github.com/TheJumpCloud/jcapi-go/v2"
@@ -35,16 +34,16 @@ func resourceUserGroupMembership() *schema.Resource {
 			},
 		},
 		Importer: &schema.ResourceImporter{
-			State: UserGroupMembershipImporter,
+			State: userGroupMembershipImporter,
 		},
 	}
 }
 
 // We cannot use the regular importer as it calls the read function ONLY with the ID field being
-// populated.- In our case, we need the group Id and user Is to do the read - But since our
-// artificial resource ID is simply the combination of user ID group ID seperated by  a'/'  ,
-// we can derive both vautes during our import process'
-func UserGroupMembershipImporter(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+// populated.- In our case, we need the group ID and user ID to do the read - But since our
+// artificial resource ID is simply the concatenation of user ID group ID seperated by  a '/',
+// we can derive both values during our import process
+func userGroupMembershipImporter(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 	s := strings.Split(d.Id(), "/")
 	d.Set("groupid", s[0])
 	d.Set("userid", s[1])
@@ -53,6 +52,7 @@ func UserGroupMembershipImporter(d *schema.ResourceData, m interface{}) ([]*sche
 
 func modifyUserGroupMembership(client *jcapiv2.APIClient,
 	d *schema.ResourceData, action string) error {
+
 	payload := jcapiv2.UserGroupMembersReq{
 		Op:    action,
 		Type_: "user",
@@ -66,10 +66,8 @@ func modifyUserGroupMembership(client *jcapiv2.APIClient,
 
 	_, err := client.UserGroupMembersMembershipApi.GraphUserGroupMembersPost(
 		context.TODO(), d.Get("groupid").(string), "", "", req)
-	if err != nil {
-		return err
-	}
-	return nil
+
+	return err
 }
 
 func resourceUserGroupMembershipCreate(d *schema.ResourceData, m interface{}) error {
@@ -92,12 +90,13 @@ func resourceUserGroupMembershipRead(d *schema.ResourceData, m interface{}) erro
 	if err != nil {
 		return err
 	}
+
 	// The Userids are hidden in a super-complex construct, see
 	// https://github.com/TheJumpCloud/jcapi-go/blob/master/v2/docs/GraphConnection.md
 	for _, v := range graphconnect {
 		if v.To.Id == d.Get("userid") {
 			// Found - As we not have a JC-ID for the membership we simply store
-			// the combination of group ID and user ID as our membership ID
+			// the concatenation of group ID and user ID as our membership ID
 			d.SetId(d.Get("groupid").(string) + "/" + d.Get("userid").(string))
 			return nil
 		}
@@ -110,6 +109,5 @@ func resourceUserGroupMembershipRead(d *schema.ResourceData, m interface{}) erro
 func resourceUserGroupMembershipDelete(d *schema.ResourceData, m interface{}) error {
 	config := m.(*jcapiv2.Configuration)
 	client := jcapiv2.NewAPIClient(config)
-
 	return modifyUserGroupMembership(client, d, "remove")
 }
