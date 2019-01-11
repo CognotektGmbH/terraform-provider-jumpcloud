@@ -66,10 +66,8 @@ func modifyUserGroupMembership(client *jcapiv2.APIClient,
 
 	_, err := client.UserGroupMembersMembershipApi.GraphUserGroupMembersPost(
 		context.TODO(), d.Get("groupid").(string), "", "", req)
-	if err != nil {
-		return err
-	}
-	return nil
+
+	return err
 }
 
 func resourceUserGroupMembershipCreate(d *schema.ResourceData, m interface{}) error {
