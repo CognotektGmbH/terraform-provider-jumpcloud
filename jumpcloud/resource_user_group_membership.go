@@ -34,16 +34,16 @@ func resourceUserGroupMembership() *schema.Resource {
 			},
 		},
 		Importer: &schema.ResourceImporter{
-			State: UserGroupMembershipImporter,
+			State: userGroupMembershipImporter,
 		},
 	}
 }
 
 // We cannot use the regular importer as it calls the read function ONLY with the ID field being
-// populated.- In our case, we need the group Id and user Is to do the read - But since our
-// artificial resource ID is simply the combination of user ID group ID seperated by  a'/'  ,
-// we can derive both vautes during our import process'
-func UserGroupMembershipImporter(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+// populated.- In our case, we need the group ID and user ID to do the read - But since our
+// artificial resource ID is simply the concatenation of user ID group ID seperated by  a '/',
+// we can derive both values during our import process
+func userGroupMembershipImporter(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 	s := strings.Split(d.Id(), "/")
 	d.Set("groupid", s[0])
 	d.Set("userid", s[1])
@@ -91,12 +91,13 @@ func resourceUserGroupMembershipRead(d *schema.ResourceData, m interface{}) erro
 	if err != nil {
 		return err
 	}
+
 	// The Userids are hidden in a super-complex construct, see
 	// https://github.com/TheJumpCloud/jcapi-go/blob/master/v2/docs/GraphConnection.md
 	for _, v := range graphconnect {
 		if v.To.Id == d.Get("userid") {
 			// Found - As we not have a JC-ID for the membership we simply store
-			// the combination of group ID and user ID as our membership ID
+			// the concatenation of group ID and user ID as our membership ID
 			d.SetId(d.Get("groupid").(string) + "/" + d.Get("userid").(string))
 			return nil
 		}

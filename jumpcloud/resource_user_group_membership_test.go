@@ -17,7 +17,7 @@ func TestAccUserGroupMembership(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				// The only reasonable step is to check if the useris is in the state
+				// The only reasonable step is to check if the user is in the state
 				// It will be deleted from the state in case the membership could not be
 				// established
 				Config: testAccUserGroupMembership(rName),
