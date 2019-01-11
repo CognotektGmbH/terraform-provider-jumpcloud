@@ -2,7 +2,6 @@ package jumpcloud
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	jcapiv2 "github.com/TheJumpCloud/jcapi-go/v2"
