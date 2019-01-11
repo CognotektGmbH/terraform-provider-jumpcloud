@@ -52,6 +52,7 @@ func userGroupMembershipImporter(d *schema.ResourceData, m interface{}) ([]*sche
 
 func modifyUserGroupMembership(client *jcapiv2.APIClient,
 	d *schema.ResourceData, action string) error {
+
 	payload := jcapiv2.UserGroupMembersReq{
 		Op:    action,
 		Type_: "user",
@@ -110,6 +111,5 @@ func resourceUserGroupMembershipRead(d *schema.ResourceData, m interface{}) erro
 func resourceUserGroupMembershipDelete(d *schema.ResourceData, m interface{}) error {
 	config := m.(*jcapiv2.Configuration)
 	client := jcapiv2.NewAPIClient(config)
-
 	return modifyUserGroupMembership(client, d, "remove")
 }
