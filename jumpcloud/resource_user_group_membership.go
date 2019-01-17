@@ -85,8 +85,13 @@ func resourceUserGroupMembershipRead(d *schema.ResourceData, m interface{}) erro
 	config := m.(*jcapiv2.Configuration)
 	client := jcapiv2.NewAPIClient(config)
 
+	optionals := map[string]interface{}{
+		"groupId": d.Get("groupid").(string),
+		"limit":   int32(100),
+	}
+
 	graphconnect, _, err := client.UserGroupMembersMembershipApi.GraphUserGroupMembersList(
-		context.TODO(), d.Get("groupid").(string), "", "", nil)
+		context.TODO(), d.Get("groupid").(string), "", "", optionals)
 	if err != nil {
 		return err
 	}
