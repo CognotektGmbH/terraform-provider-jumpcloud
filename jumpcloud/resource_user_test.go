@@ -41,15 +41,12 @@ func testAccPreCheck(t *testing.T) {
 
 func testAccUser(name string) string {
 	return fmt.Sprintf(`
-
-	resource "jumpcloud_user" "test_user" {
-  username = "%s"
-  email = "%s@testorg.com"
-  firstname = "Firstname"
-  lastname = "Lastname"
-  enable_mfa = true
-  }
-`,
-		name, name,
+		resource "jumpcloud_user" "test_user" {
+  			username = "%s"
+			email = "%s@testorg.com"
+			firstname = "Firstname"
+			lastname = "Lastname"
+			enable_mfa = true
+		}`, name, name,
 	)
 }
