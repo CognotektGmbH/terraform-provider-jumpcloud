@@ -19,7 +19,6 @@ func resourceUser() *schema.Resource {
 			"username": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 			"xorgid": {
 				Type:     schema.TypeString,
