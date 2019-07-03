@@ -1,11 +1,4 @@
-install: deps
-	mkdir -p ~/.terraform.d/plugins
-	go build -o ~/.terraform.d/plugins/terraform-provider-jumpcloud
-deps:
-	dep ensure
-update-deps:
-	dep ensure -update
-build: deps
-	go build .
-testacc: deps
+build:
+	go build -o terraform-provider-jumpcloud
+testacc: build
 	TF_ACC=true go test -v ./...

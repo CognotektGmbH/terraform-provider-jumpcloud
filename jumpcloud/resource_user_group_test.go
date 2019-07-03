@@ -39,9 +39,9 @@ func testAccUserGroup(name string, gid int, posixName string) string {
 	return fmt.Sprintf(`
 		resource "jumpcloud_user_group" "test_group" {
     		name = "%s"
-    		attributes {
-      			posix_groups = "%d:%s"
-    		}
+			attributes = {
+				posix_groups = "%d:%s"
+			}
 		}`, name, gid, posixName,
 	)
 }
