@@ -8,10 +8,10 @@ fi
 RELEASE_DIR="/tmp/terraform-provider-jumpcloud/releases/$1"
 
 echo "Creating source archive"
-tar -cvf "${RELEASE_DIR}/source-{$1}.tar.gz" ./
+tar -cvf "${RELEASE_DIR}/source-$1.tar.gz" ./
 
 mkdir -p "${RELEASE_DIR}"
-for GOARCH in 386 amD64
+for GOARCH in 386 amd64
 do
   for GOOS in darwin linux
   do
@@ -24,7 +24,7 @@ do
 done
 
 echo "Creating md5 checksum"
-md5sum "${TARGETS}" > "${RELEASE_DIR}/checksum-md5.txt"
+md5sum ${TARGETS} > "${RELEASE_DIR}/checksum-md5.txt"
 
 echo "Creating sh1 checksum"
-sha1sum "${TARGETS}" > "${RELEASE_DIR}/checksum-sha1.txt"
+sha1sum ${TARGETS} > "${RELEASE_DIR}/checksum-sha1.txt"
