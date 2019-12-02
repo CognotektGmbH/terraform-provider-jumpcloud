@@ -22,11 +22,6 @@ func resourceUserGroupMembership() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"xorgid": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
 			"groupid": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -61,7 +56,6 @@ func modifyUserGroupMembership(client *jcapiv2.APIClient,
 
 	req := map[string]interface{}{
 		"body":   payload,
-		"xOrgId": d.Get("xorgid").(string),
 	}
 
 	_, err := client.UserGroupMembersMembershipApi.GraphUserGroupMembersPost(
