@@ -32,6 +32,10 @@ func resourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"password": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"enable_mfa": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -65,6 +69,7 @@ func resourceUserCreate(d *schema.ResourceData, m interface{}) error {
 		Email:                       d.Get("email").(string),
 		Firstname:                   d.Get("firstname").(string),
 		Lastname:                    d.Get("lastname").(string),
+		Password:                    d.Get("password").(string),
 		EnableUserPortalMultifactor: d.Get("enable_mfa").(bool),
 	}
 	req := map[string]interface{}{
@@ -127,6 +132,7 @@ func resourceUserUpdate(d *schema.ResourceData, m interface{}) error {
 		Email:                       d.Get("email").(string),
 		Firstname:                   d.Get("firstname").(string),
 		Lastname:                    d.Get("lastname").(string),
+		Password:                    d.Get("password").(string),
 		EnableUserPortalMultifactor: d.Get("enable_mfa").(bool),
 	}
 
