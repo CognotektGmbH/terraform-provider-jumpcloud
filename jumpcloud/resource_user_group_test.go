@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	jcapiv2 "github.com/TheJumpCloud/jcapi-go/v2"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 )
