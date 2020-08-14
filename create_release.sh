@@ -7,10 +7,11 @@ fi
 
 RELEASE_DIR="/tmp/terraform-provider-jumpcloud/releases/$1"
 
+mkdir -p "${RELEASE_DIR}"
+
 echo "Creating source archive"
 tar -cvf "${RELEASE_DIR}/source-$1.tar.gz" ./
 
-mkdir -p "${RELEASE_DIR}"
 for GOARCH in 386 amd64
 do
   for GOOS in darwin linux
