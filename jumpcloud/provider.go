@@ -1,6 +1,6 @@
 package jumpcloud
 
-import "github.com/hashicorp/terraform/helper/schema"
+import "github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 // Provider instantiates a terraform provider for Jumpcloud
 // This includes all operations on all supported resources and

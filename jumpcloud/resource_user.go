@@ -6,7 +6,7 @@ import (
 
 	jcapiv1 "github.com/TheJumpCloud/jcapi-go/v1"
 	jcapiv2 "github.com/TheJumpCloud/jcapi-go/v2"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceUser() *schema.Resource {
@@ -29,6 +29,10 @@ func resourceUser() *schema.Resource {
 				Optional: true,
 			},
 			"lastname": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"password": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -65,6 +69,7 @@ func resourceUserCreate(d *schema.ResourceData, m interface{}) error {
 		Email:                       d.Get("email").(string),
 		Firstname:                   d.Get("firstname").(string),
 		Lastname:                    d.Get("lastname").(string),
+		Password:                    d.Get("password").(string),
 		EnableUserPortalMultifactor: d.Get("enable_mfa").(bool),
 	}
 	req := map[string]interface{}{
@@ -127,6 +132,7 @@ func resourceUserUpdate(d *schema.ResourceData, m interface{}) error {
 		Email:                       d.Get("email").(string),
 		Firstname:                   d.Get("firstname").(string),
 		Lastname:                    d.Get("lastname").(string),
+		Password:                    d.Get("password").(string),
 		EnableUserPortalMultifactor: d.Get("enable_mfa").(bool),
 	}
 
