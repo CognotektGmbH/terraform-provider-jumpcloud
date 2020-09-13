@@ -26,7 +26,7 @@ func Provider() *schema.Provider {
 			"jumpcloud_user":                  resourceUser(),
 			"jumpcloud_user_group":            resourceUserGroup(),
 			"jumpcloud_user_group_membership": resourceUserGroupMembership(),
-			"jumpcloud_system_group":          resourceSystemGroup(),
+			"jumpcloud_system_group":          resourceGroupsSystem(),
 			// "jumpcloud_system_group_membership":            resourceSystemGroupMembership(),
 			// "jumpcloud_system_group_user_group_membership": resourceSystemGroupUserGroupMembership(),
 		},
