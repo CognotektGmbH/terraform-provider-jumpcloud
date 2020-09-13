@@ -14,10 +14,11 @@ tar -cvf "${RELEASE_DIR}/source-$1.tar.gz" ./
 
 for GOARCH in 386 amd64
 do
-  for GOOS in darwin linux
+  for GOOS in windows darwin linux
   do
     echo "Creating release binary for ${GOOS} / ${GOARCH}"
-  	env GOOS=${GOOS} GOARCH=${GOARCH} go build -o terraform-provider-jumpcloud
+    # Brute set Go Modules on on chance "auto" does not result in modules.
+  	GO111MODULE=on GOOS=${GOOS} GOARCH=${GOARCH} go build -o terraform-provider-jumpcloud
     TARGET_FILENAME="${RELEASE_DIR}/terraform-provider-jumpcloud_${1}_${GOOS}_${GOARCH}.tar.gz"
     tar -cvf "${TARGET_FILENAME}" terraform-provider-jumpcloud
     TARGETS="$TARGETS $TARGET_FILENAME"
