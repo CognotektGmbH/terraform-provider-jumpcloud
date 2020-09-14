@@ -29,7 +29,7 @@ func resourceUserGroupMembership() *schema.Resource {
 			},
 		},
 		Importer: &schema.ResourceImporter{
-			schema.ImportStatePassthrough,
+			State: userGroupMembershipImporter,
 		},
 	}
 }
