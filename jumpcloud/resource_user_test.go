@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 func TestAccUser(t *testing.T) {
@@ -41,15 +41,12 @@ func testAccPreCheck(t *testing.T) {
 
 func testAccUser(name string) string {
 	return fmt.Sprintf(`
-
-	resource "jumpcloud_user" "test_user" {
-  username = "%s"
-  email = "%s@testorg.com"
-  firstname = "Firstname"
-  lastname = "Lastname"
-  enable_mfa = true
-  }
-`,
-		name, name,
+		resource "jumpcloud_user" "test_user" {
+  			username = "%s"
+			email = "%s@testorg.com"
+			firstname = "Firstname"
+			lastname = "Lastname"
+			enable_mfa = true
+		}`, name, name,
 	)
 }

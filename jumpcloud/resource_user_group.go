@@ -8,7 +8,7 @@ import (
 	"net/http"
 
 	jcapiv2 "github.com/TheJumpCloud/jcapi-go/v2"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceUserGroup() *schema.Resource {
@@ -21,10 +21,6 @@ func resourceUserGroup() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
-			},
-			"xorgid": {
-				Type:     schema.TypeString,
-				Optional: true,
 			},
 			"attributes": {
 				Type:     schema.TypeMap,
@@ -72,8 +68,7 @@ func resourceUserGroupCreate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	req := map[string]interface{}{
-		"body":   body,
-		"xOrgId": d.Get("xorgid").(string),
+		"body": body,
 	}
 	group, res, err := client.UserGroupsApi.GroupsUserPost(context.TODO(),
 		"", headerAccept, req)
@@ -126,6 +121,9 @@ func userGroupReadHelper(config *jcapiv2.Configuration, id string) (ug *UserGrou
 	}
 
 	req.Header.Add("x-api-key", config.DefaultHeader["x-api-key"])
+	if config.DefaultHeader["x-org-id"] != "" {
+		req.Header.Add("x-org-id", config.DefaultHeader["x-org-id"])
+	}
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Accept", "application/json")
 
@@ -156,8 +154,7 @@ func resourceUserGroupUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	req := map[string]interface{}{
-		"body":   body,
-		"xOrgId": d.Get("xorgid").(string),
+		"body": body,
 	}
 	// behaves like PUT, will fail if
 	// attributes.posixGroups isn't sent, see GODOC

@@ -26,5 +26,8 @@ make build
 
 If you're building the provider, follow the instructions to [install it as a plugin.](https://www.terraform.io/docs/plugins/basics.html#installing-a-plugin) After placing it into your plugins directory,  run `terraform init` to initialize it.
 
-## Tips 
-* When importing a resource, you need the Jumpcloud ID. It can either be retrieved via the API or through the UI : When selecting a resource, the ID is part of URL.
+The Jumpcloud API key needs to be set before using the provider. It can either be retrieved via the API or through the UI : When selecting a resource, the ID is part of URL.
+Export `JUMPCLOUD_API_KEY` to set it.
+
+The Jumpcloud "Organization ID" is optional as only needed for multi-tenant-setups.
+Export `JUMPCLOUD_ORG_ID` to set it.

@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	jcapiv2 "github.com/TheJumpCloud/jcapi-go/v2"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceUserGroupMembership() *schema.Resource {
@@ -20,11 +20,6 @@ func resourceUserGroupMembership() *schema.Resource {
 			"userid": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
-			},
-			"xorgid": {
-				Type:     schema.TypeString,
-				Optional: true,
 				ForceNew: true,
 			},
 			"groupid": {
@@ -60,8 +55,7 @@ func modifyUserGroupMembership(client *jcapiv2.APIClient,
 	}
 
 	req := map[string]interface{}{
-		"body":   payload,
-		"xOrgId": d.Get("xorgid").(string),
+		"body": payload,
 	}
 
 	_, err := client.UserGroupMembersMembershipApi.GraphUserGroupMembersPost(

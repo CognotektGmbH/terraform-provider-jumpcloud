@@ -6,7 +6,7 @@ import (
 
 	jcapiv1 "github.com/TheJumpCloud/jcapi-go/v1"
 	jcapiv2 "github.com/TheJumpCloud/jcapi-go/v2"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceUser() *schema.Resource {
@@ -19,11 +19,6 @@ func resourceUser() *schema.Resource {
 			"username": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
-			},
-			"xorgid": {
-				Type:     schema.TypeString,
-				Optional: true,
 			},
 			"email": {
 				Type:     schema.TypeString,
@@ -34,6 +29,10 @@ func resourceUser() *schema.Resource {
 				Optional: true,
 			},
 			"lastname": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"password": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -55,6 +54,9 @@ func resourceUser() *schema.Resource {
 func convertV2toV1Config(v2config *jcapiv2.Configuration) *jcapiv1.Configuration {
 	configv1 := jcapiv1.NewConfiguration()
 	configv1.AddDefaultHeader("x-api-key", v2config.DefaultHeader["x-api-key"])
+	if v2config.DefaultHeader["x-org-id"] != "" {
+		configv1.AddDefaultHeader("x-org-id", v2config.DefaultHeader["x-org-id"])
+	}
 	return configv1
 }
 
@@ -67,12 +69,11 @@ func resourceUserCreate(d *schema.ResourceData, m interface{}) error {
 		Email:                       d.Get("email").(string),
 		Firstname:                   d.Get("firstname").(string),
 		Lastname:                    d.Get("lastname").(string),
+		Password:                    d.Get("password").(string),
 		EnableUserPortalMultifactor: d.Get("enable_mfa").(bool),
 	}
-
 	req := map[string]interface{}{
-		"body":   payload,
-		"xOrgId": d.Get("xorgid").(string),
+		"body": payload,
 	}
 	returnstruc, _, err := client.SystemusersApi.SystemusersPost(context.TODO(),
 		"", "", req)
@@ -131,12 +132,12 @@ func resourceUserUpdate(d *schema.ResourceData, m interface{}) error {
 		Email:                       d.Get("email").(string),
 		Firstname:                   d.Get("firstname").(string),
 		Lastname:                    d.Get("lastname").(string),
+		Password:                    d.Get("password").(string),
 		EnableUserPortalMultifactor: d.Get("enable_mfa").(bool),
 	}
 
 	req := map[string]interface{}{
-		"body":   payload,
-		"xOrgId": d.Get("xorgid").(string),
+		"body": payload,
 	}
 	_, _, err := client.SystemusersApi.SystemusersPut(context.TODO(),
 		d.Id(), "", "", req)
