@@ -15,10 +15,6 @@ func resourceGroupsSystem() *schema.Resource {
 		Update: resourceGroupsSystemUpdate,
 		Delete: resourceGroupsSystemDelete,
 		Schema: map[string]*schema.Schema{
-			"id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
 			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -51,26 +47,6 @@ func resourceGroupsSystemCreate(d *schema.ResourceData, m interface{}) error {
 	return resourceGroupsSystemRead(d, m)
 }
 
-// Helper to look up a system group by name
-func resourceGroupsSystemList_match(d *schema.ResourceData, m interface{}) (jcapiv2.SystemGroup, error) {
-	config := m.(*jcapiv2.Configuration)
-	client := jcapiv2.NewAPIClient(config)
-
-	filter := "[name:eq:" + d.Get("name").(string) + "]"
-
-	req := map[string]interface{}{
-		"filter": filter,
-	}
-
-	result, _, err := client.SystemGroupsApi.GroupsSystemList(context.TODO(),
-		"", headerAccept, req)
-	if err == nil {
-		return result[0], nil
-	} else {
-		return jcapiv2.SystemGroup{}, err
-	}
-}
-
 func resourceGroupsSystemRead(d *schema.ResourceData, m interface{}) error {
 	config := m.(*jcapiv2.Configuration)
 	client := jcapiv2.NewAPIClient(config)
@@ -78,15 +54,6 @@ func resourceGroupsSystemRead(d *schema.ResourceData, m interface{}) error {
 	var id string
 
 	id = d.Id()
-
-	if d.Id() != "" {
-		id_lookup, err := resourceGroupsSystemList_match(d, m)
-		if err != nil {
-			return fmt.Errorf("unable to locate ID for group %s",
-				d.Get("name"))
-		}
-		d.SetId(id_lookup.Id)
-	}
 
 	group, res, err := client.SystemGroupsApi.GroupsSystemGet(context.TODO(),
 		id, "", headerAccept, nil)

@@ -29,7 +29,7 @@ func resourceUserGroupMembership() *schema.Resource {
 			},
 		},
 		Importer: &schema.ResourceImporter{
-			State: userGroupMembershipImporter,
+			schema.ImportStatePassthrough,
 		},
 	}
 }
@@ -55,7 +55,7 @@ func modifyUserGroupMembership(client *jcapiv2.APIClient,
 	}
 
 	req := map[string]interface{}{
-		"body":   payload,
+		"body": payload,
 	}
 
 	_, err := client.UserGroupMembersMembershipApi.GraphUserGroupMembersPost(
