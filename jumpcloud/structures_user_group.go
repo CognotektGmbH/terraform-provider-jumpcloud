@@ -10,14 +10,14 @@ import (
 	jcapiv2 "github.com/TheJumpCloud/jcapi-go/v2"
 )
 
-func flattenAttributes(attr *jcapiv2.UserGroupPostAttributes) map[string]interface{} {
+func flattenAttributes(attr *jcapiv2.UserGroupAttributes) map[string]interface{} {
 	return map[string]interface{}{
 		"posix_groups": flattenPosixGroups(attr.PosixGroups),
 		// "enable_samba": fmt.Sprintf("%t", attr.SambaEnabled),
 	}
 }
 
-func flattenPosixGroups(pg []jcapiv2.UserGroupPostAttributesPosixGroups) string {
+func flattenPosixGroups(pg []jcapiv2.UserGroupAttributesPosixGroups) string {
 	out := []string{}
 	for _, v := range pg {
 		out = append(out, fmt.Sprintf("%d:%s", v.Id, v.Name))
@@ -25,7 +25,7 @@ func flattenPosixGroups(pg []jcapiv2.UserGroupPostAttributesPosixGroups) string 
 	return strings.Join(out, ",")
 }
 
-func expandAttributes(attr interface{}) (out *jcapiv2.UserGroupPostAttributes, ok bool) {
+func expandAttributes(attr interface{}) (out *jcapiv2.UserGroupAttributes, ok bool) {
 	if attr == nil {
 		return
 	}
@@ -47,7 +47,7 @@ func expandAttributes(attr interface{}) (out *jcapiv2.UserGroupPostAttributes, o
 	}
 
 	groups := strings.Split(posixStr, ",")
-	posixGroups := []jcapiv2.UserGroupPostAttributesPosixGroups{}
+	posixGroups := []jcapiv2.UserGroupAttributesPosixGroups{}
 	for _, v := range groups {
 		g := strings.Split(v, ":")
 		if len(g) != 2 {
@@ -58,7 +58,7 @@ func expandAttributes(attr interface{}) (out *jcapiv2.UserGroupPostAttributes, o
 			continue
 		}
 		posixGroups = append(posixGroups,
-			jcapiv2.UserGroupPostAttributesPosixGroups{
+			jcapiv2.UserGroupAttributesPosixGroups{
 				Id: int32(id), Name: g[1],
 			})
 	}
@@ -67,7 +67,7 @@ func expandAttributes(attr interface{}) (out *jcapiv2.UserGroupPostAttributes, o
 		return
 	}
 
-	return &jcapiv2.UserGroupPostAttributes{
+	return &jcapiv2.UserGroupAttributes{
 		PosixGroups: posixGroups,
 		// SambaEnabled: enableSamba,
 	}, true
