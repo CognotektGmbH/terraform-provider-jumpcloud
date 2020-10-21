@@ -11,6 +11,6 @@ type UserGroup struct {
 	Type string `json:"type,omitempty"`
 
 	// Display name of a User Group.
-	Name       string                          `json:"name,omitempty"`
-	Attributes jcapiv2.UserGroupPostAttributes `json:"attributes,omitempty"`
+	Name       string                      `json:"name,omitempty"`
+	Attributes jcapiv2.UserGroupAttributes `json:"attributes,omitempty"`
 }
