@@ -1,0 +1,22 @@
+# .travis.yml
+dist: focal
+
+language: go
+
+matrix:
+  include:
+    - go: 1.12.x
+
+script:
+  - env GO111MODULE=on go test ./... # replace this with your test script
+  - curl -sfL https://git.io/goreleaser | GO111MODULE=on sh -s -- check # check goreleaser config for deprecations
+  - curl -sfL https://git.io/goreleaser | GO111MODULE=on sh -s -- build --snapshot --rm-dist
+
+# calls goreleaser
+deploy:
+- provider: script
+  skip_cleanup: true
+  script: env GO111MODULE=on curl -sL https://git.io/goreleaser | GO111MODULE=on bash -s -- build --snapshot 
+  on:
+    tags: true
+    condition: $TRAVIS_OS_NAME = linux
