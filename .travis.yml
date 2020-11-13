@@ -11,12 +11,15 @@ script:
   - env GO111MODULE=on go test ./... # replace this with your test script
   - curl -sfL https://git.io/goreleaser | GO111MODULE=on sh -s -- check # check goreleaser config for deprecations
   - curl -sfL https://git.io/goreleaser | GO111MODULE=on sh -s -- build --snapshot --rm-dist
+  - rm -rf dist
+  - rm go.sum
 
 # calls goreleaser
 deploy:
 - provider: script
   skip_cleanup: true
-  script: env GO111MODULE=on curl -sL https://git.io/goreleaser | GO111MODULE=on bash -s -- build --snapshot 
+  script: 
+    - curl -sL https://git.io/goreleaser | GO111MODULE=on bash -s -- --rm-dist
   on:
     tags: true
-    condition: $TRAVIS_OS_NAME = linux
+    condition: $TRAVIS_TAG =~ ^v[0-9]+\.[0-9]+\.[0-9]+
