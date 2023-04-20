@@ -3,13 +3,15 @@ package jumpcloud
 import (
 	"context"
 	"fmt"
+
 	// "encoding/json"
 	// "net/http"
+
+	"log"
 
 	jcapiv1 "github.com/TheJumpCloud/jcapi-go/v1"
 	jcapiv2 "github.com/TheJumpCloud/jcapi-go/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"log"
 )
 
 func resourceAppliaction() *schema.Resource {
@@ -152,7 +154,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, m interface{}) error {
 	client := jcapiv1.NewAPIClient(configv1)
 
 	payload := jcapiv1.Application{
-		Active:       true,
+		// Active:       true,
 		SsoUrl:       d.Get("sso_url").(string),
 		DisplayLabel: d.Get("display_label").(string),
 		Config: &jcapiv1.ApplicationConfig{
