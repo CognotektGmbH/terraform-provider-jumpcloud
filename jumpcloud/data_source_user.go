@@ -6,22 +6,23 @@ import (
 	"fmt"
 
 	jcapiv1 "github.com/TheJumpCloud/jcapi-go/v1"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	// "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceJumpCloudUser() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceJumpCloudUserRead,
 		Schema: map[string]*schema.Schema{
-			"email": &schema.Schema{
+			"email": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"id": &schema.Schema{
+			"id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"username": &schema.Schema{
+			"username": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
