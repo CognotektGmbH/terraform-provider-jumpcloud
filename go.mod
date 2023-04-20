@@ -1,4 +1,4 @@
-module github.com/cognotektgmbh/terraform-provider-jumpcloud
+module github.com/cheelim1/terraform-provider-jumpcloud
 
 go 1.13
 
