@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	jcapiv1 "github.com/TheJumpCloud/jcapi-go/v1"
+	jcapiv2 "github.com/TheJumpCloud/jcapi-go/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	// "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -17,10 +18,6 @@ func dataSourceJumpCloudUser() *schema.Resource {
 			"email": {
 				Type:     schema.TypeString,
 				Required: true,
-			},
-			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 			"username": {
 				Type:     schema.TypeString,
@@ -71,8 +68,8 @@ func getUserDetails(client *jcapiv1.APIClient, userID, email, username string) (
 }
 
 func dataSourceJumpCloudUserRead(d *schema.ResourceData, m interface{}) error {
-    config := m.(*jcapiv1.Configuration)
-    client := jcapiv1.NewAPIClient(config)
+    configv1 := convertV2toV1Config(m.(*jcapiv2.Configuration))
+    client := jcapiv1.NewAPIClient(configv1)
     userEmail := d.Get("email").(string)
 
     // Use the getUserDetails function to query user details using the userEmail
