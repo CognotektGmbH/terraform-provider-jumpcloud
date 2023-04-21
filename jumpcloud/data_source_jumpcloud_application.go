@@ -3,6 +3,7 @@ package jumpcloud
 import (
 	"context"
 	"fmt"
+	"log"
 
 	jcapiv1 "github.com/TheJumpCloud/jcapi-go/v1"
 	jcapiv2 "github.com/TheJumpCloud/jcapi-go/v2"
@@ -48,6 +49,9 @@ func dataSourceJumpCloudApplicationRead(d *schema.ResourceData, m interface{}) e
 	applications := applicationsResponse.Results
 
 	for _, application := range applications {
+		log.Printf("[DEBUG] Found application with name '%s' and display label '%s'", application.Name, application.DisplayName)
+		log.Printf("[DEBUG] Checking application with ID: %s, Name: %s, DisplayName: %s\n", application.Id, application.Name, application.DisplayName)
+		
 		if (nameExists && application.Name == applicationName) || (displayLabelExists && application.DisplayName == displayLabel) {
 			d.SetId(application.Id)
 			return nil

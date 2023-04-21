@@ -13,7 +13,7 @@ Use this data source to get information about a Jumpcloud application.
 ## Example Usage
 
 ```hcl
-data "jumpcloud_application "example" {
+data "jumpcloud_application" "example" {
     name = "AWS IAM Identity Center"
     display_label = "Example App"
 }
