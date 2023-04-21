@@ -31,3 +31,10 @@ Export `JUMPCLOUD_API_KEY` to set it.
 
 The Jumpcloud "Organization ID" is optional as only needed for multi-tenant-setups.
 Export `JUMPCLOUD_ORG_ID` to set it.
+
+
+## Auto Update Docs
+`go generate`
+
+## Run tests
+`ex: go test -v ./... -run TestAccDataSourceJumpCloudUserGroup_basic`
