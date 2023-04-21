@@ -33,6 +33,9 @@ func Provider() *schema.Provider {
 		},
 		DataSourcesMap: map[string]*schema.Resource{
             "jumpcloud_user": dataSourceJumpCloudUser(),
+			"jumpcloud_user_group": dataSourceJumpCloudUserGroup(),
+			"jumpcloud_application": dataSourceJumpCloudApplication(),
+
         },
 		ConfigureFunc: providerConfigure,
 	}
