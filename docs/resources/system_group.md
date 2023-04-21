@@ -3,11 +3,10 @@
 page_title: "jumpcloud_system_group Resource - terraform-provider-jumpcloud"
 subcategory: ""
 description: |-
-  
+    Provides a JumpCloud system group resource. Refer to the JumpCloud API model https://docs.jumpcloud.com/2.0/models/usergroup for further details.
 ---
 
-# jumpcloud_system_group (Resource)
-
+# Resource `jumpcloud_system_group`
 
 
 

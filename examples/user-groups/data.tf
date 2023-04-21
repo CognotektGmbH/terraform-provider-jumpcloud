@@ -7,3 +7,7 @@
 data "jumpcloud_user" "example" {
   email = "user@example.com"
 }
+
+output "example" {
+  value = data.jumpcloud_user.example.id
+}
