@@ -15,7 +15,11 @@ func dataSourceJumpCloudApplication() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
+			},
+			"display_label": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"id": {
 				Type:     schema.TypeString,
@@ -28,8 +32,14 @@ func dataSourceJumpCloudApplication() *schema.Resource {
 func dataSourceJumpCloudApplicationRead(d *schema.ResourceData, m interface{}) error {
 	configv1 := convertV2toV1Config(m.(*jcapiv2.Configuration))
 	client := jcapiv1.NewAPIClient(configv1)
-	applicationName := d.Get("name").(string)
-	applicationsResponse, _, err := client.ApplicationsApi.ApplicationsList(context.Background(), "_id, displayName", "", nil)
+	applicationName, nameExists := d.GetOk("name")
+	displayLabel, displayLabelExists := d.GetOk("display_label")
+
+	if !nameExists && !displayLabelExists {
+		return fmt.Errorf("either name or display_label must be provided")
+	}
+
+	applicationsResponse, _, err := client.ApplicationsApi.ApplicationsList(context.Background(), "_id, name, displayName", "", nil)
 
 	if err != nil {
 		return err
@@ -38,11 +48,11 @@ func dataSourceJumpCloudApplicationRead(d *schema.ResourceData, m interface{}) e
 	applications := applicationsResponse.Results
 
 	for _, application := range applications {
-		if application.DisplayName == applicationName {
+		if (nameExists && application.Name == applicationName) || (displayLabelExists && application.DisplayName == displayLabel) {
 			d.SetId(application.Id)
 			return nil
 		}
 	}
 
-	return fmt.Errorf("No application found with name: %s", applicationName)
+	return fmt.Errorf("no application found with the provided filters")
 }

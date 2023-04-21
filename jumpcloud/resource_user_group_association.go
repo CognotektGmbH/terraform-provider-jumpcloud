@@ -5,17 +5,17 @@ import (
 	"fmt"
 
 	jcapiv2 "github.com/TheJumpCloud/jcapi-go/v2"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceUserGroupAssociation() *schema.Resource {
 	return &schema.Resource{
-		Description:   "Provides a resource for associating a JumpCloud user group to objects like SSO applications, G Suite, Office 365, LDAP and more.",
-		CreateContext: resourceUserGroupAssociationCreate,
-		ReadContext:   resourceUserGroupAssociationRead,
-		UpdateContext: nil,
-		DeleteContext: resourceUserGroupAssociationDelete,
+		Description: "Provides a resource for associating a JumpCloud user group to objects like SSO applications, G Suite, Office 365, LDAP and more.",
+		Create:       resourceUserGroupAssociationCreate,
+		Read:         resourceUserGroupAssociationRead,
+		Update:       nil,
+		Delete:       resourceUserGroupAssociationDelete,
 		Schema: map[string]*schema.Schema{
 			"group_id": {
 				Description: "The ID of the `resource_user_group` resource.",
@@ -59,6 +59,7 @@ func resourceUserGroupAssociation() *schema.Resource {
 	}
 }
 
+
 func modifyUserGroupAssociation(client *jcapiv2.APIClient,
 	d *schema.ResourceData, action string) diag.Diagnostics {
 
@@ -78,18 +79,19 @@ func modifyUserGroupAssociation(client *jcapiv2.APIClient,
 	return diag.FromErr(err)
 }
 
-func resourceUserGroupAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserGroupAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*jcapiv2.Configuration)
 	client := jcapiv2.NewAPIClient(config)
 
-	err := modifyUserGroupAssociation(client, d, "add")
-	if err != nil {
-		return err
+	diags := modifyUserGroupAssociation(client, d, "add")
+	if diags.HasError() {
+		return fmt.Errorf("Error creating user group association: %v", diags)
 	}
-	return resourceUserGroupAssociationRead(ctx, d, meta)
+	return resourceUserGroupAssociationRead(d, meta)
 }
 
-func resourceUserGroupAssociationRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+
+func resourceUserGroupAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*jcapiv2.Configuration)
 	client := jcapiv2.NewAPIClient(config)
 
@@ -101,7 +103,7 @@ func resourceUserGroupAssociationRead(_ context.Context, d *schema.ResourceData,
 	graphconnect, _, err := client.UserGroupAssociationsApi.GraphUserGroupAssociationsList(
 		context.TODO(), d.Get("group_id").(string), "", "", []string{d.Get("type").(string)}, optionals)
 	if err != nil {
-		return diag.FromErr(err)
+		return err
 	}
 
 	// the ID of the specified object is buried in a complex construct
@@ -118,8 +120,12 @@ func resourceUserGroupAssociationRead(_ context.Context, d *schema.ResourceData,
 	return nil
 }
 
-func resourceUserGroupAssociationDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserGroupAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*jcapiv2.Configuration)
 	client := jcapiv2.NewAPIClient(config)
-	return modifyUserGroupAssociation(client, d, "remove")
+	diags := modifyUserGroupAssociation(client, d, "remove")
+	if diags.HasError() {
+		return fmt.Errorf("Error deleting user group association: %v", diags)
+	}
+	return nil
 }
