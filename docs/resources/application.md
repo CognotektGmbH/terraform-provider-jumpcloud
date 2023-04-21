@@ -26,18 +26,38 @@ resource "jumpcloud_application" "example" {
 
 ### Required
 
-- `aws_session_duration` (String) Value of the `https://aws.amazon.com/SAML/Attributes/SessionDuration` attribute.
+- `acs_url` (String)
 - `display_label` (String) Name of the application to display
-- `saml_role_attribute` (String) Value of the `https://aws.amazon.com/SAML/Attributes/Role` attribute.
+- `idp_certificate` (String, Sensitive)
+- `idp_entity_id` (String)
+- `idp_private_key` (String, Sensitive)
+- `name` (String) Name of the application
+- `sp_entity_id` (String)
 - `sso_url` (String) The SSO URL suffix to use
 
 ### Optional
 
-- `id` (String) The ID of this resource.
+- `beta` (Boolean)
+- `constant_attributes` (Block List) (see [below for nested schema](#nestedblock--constant_attributes))
+- `learn_more` (String)
 
 ### Read-Only
 
 - `id` (String) The ID of this resource.
 - `metadata_xml` (String) The JumpCloud metadata XML file.
+
+<a id="nestedblock--constant_attributes"></a>
+### Nested Schema for `constant_attributes`
+
+Required:
+
+- `name` (String)
+- `value` (String)
+
+Optional:
+
+- `read_only` (Boolean)
+- `required` (Boolean)
+- `visible` (Boolean)
 
 

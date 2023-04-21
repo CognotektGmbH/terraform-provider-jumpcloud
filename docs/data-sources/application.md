@@ -15,6 +15,7 @@ Use this data source to get information about a Jumpcloud application.
 ```hcl
 data "jumpcloud_application "example" {
     name = "AWS IAM Identity Center"
+    display_label = "Example App"
 }
 ```
 
@@ -22,7 +23,9 @@ data "jumpcloud_application "example" {
 ## Schema
 
 ### Required
+Please supply either one argument.
 
+- `display_label` (String) The Jumpcloud Application Display Label.
 - `name` (String) The Jumpcloud Application name.
 
 ### Read-Only
