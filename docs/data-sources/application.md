@@ -14,7 +14,7 @@ Use this data source to get information about a Jumpcloud application.
 
 ```hcl
 data "jumpcloud_application "example" {
-    name = "My Example Application"
+    name = "AWS IAM Identity Center"
 }
 ```
 

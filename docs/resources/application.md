@@ -14,7 +14,7 @@ Provides a resource for adding an Amazon Web Services (AWS) account application
 
 ```terraform
 resource "jumpcloud_application" "example" {
-  display_name         = "My AWS Account"
+  display_label        = "My AWS Account"
   sso_url              = "https://sso.jumpcloud.com/saml2/example-application"
   saml_role_attribute  = "arn:aws:iam::AWS_ACCOUNT_ID:role/MY_ROLE,arn:aws:iam::AWS_ACCOUNT_ID:saml-provider/MY_SAML_PROVIDER"
   aws_session_duration = 432000
@@ -26,18 +26,14 @@ resource "jumpcloud_application" "example" {
 
 ### Required
 
-- `display_name` (String) Name of the application to display
+- `aws_session_duration` (String) Value of the `https://aws.amazon.com/SAML/Attributes/SessionDuration` attribute.
+- `display_label` (String) Name of the application to display
+- `saml_role_attribute` (String) Value of the `https://aws.amazon.com/SAML/Attributes/Role` attribute.
 - `sso_url` (String) The SSO URL suffix to use
 
 ### Optional
 
-- `acs_url` (String)
-- `display_label` (String)
-- `idp_certificate` (String)
-- `idp_entity_id` (String)
-- `idp_private_key` (String)
-- `organization` (String)
-- `sp_entity_id` (String)
+- `id` (String) The ID of this resource.
 
 ### Read-Only
 
