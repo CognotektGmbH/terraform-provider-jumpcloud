@@ -35,34 +35,3 @@ func TestAccDataSourceJumpCloudUser(t *testing.T) {
 		},
 	})
 }
-
-// // func TestAccDataSourceJumpCloudUser_basic(t *testing.T) {
-// //     userEmail := "<existing-user-email>" // Replace this with an existing user's email address
-// //     resourceName := "data.jumpcloud_user.test"
-
-// //     resource.Test(t, resource.TestCase{
-// //         PreCheck:     func() { testAccPreCheck(t) },
-// //         Providers:    testAccProviders,
-// //         Steps: []resource.TestStep{
-// //             {
-// //                 Config: testAccDataSourceJumpCloudUserConfig(userEmail),
-// //                 Check: resource.ComposeTestCheckFunc(
-// //                     resource.TestCheckResourceAttrSet(resourceName, "id"),
-// //                 ),
-// //             },
-// //         },
-// //     })
-// // }
-
-// // func testAccDataSourceJumpCloudUserConfig(userEmail string) string {
-// //     return acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum) + `
-
-// // provider "jumpcloud" {
-// //   api_key = "` + os.Getenv("JUMPCLOUD_API_KEY") + `"
-// // }
-
-// // data "jumpcloud_user" "test" {
-// //   email = "` + userEmail + `"
-// // }
-// // `
-// // }
