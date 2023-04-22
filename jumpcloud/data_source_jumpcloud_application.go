@@ -31,6 +31,7 @@ func dataSourceJumpCloudApplication() *schema.Resource {
 }
 
 func dataSourceJumpCloudApplicationRead(d *schema.ResourceData, m interface{}) error {
+	log.Printf("[DEBUG] Starting dataSourceJumpCloudApplicationRead")
 	configv1 := convertV2toV1Config(m.(*jcapiv2.Configuration))
 	client := jcapiv1.NewAPIClient(configv1)
 	applicationName, nameExists := d.GetOk("name")
@@ -40,7 +41,7 @@ func dataSourceJumpCloudApplicationRead(d *schema.ResourceData, m interface{}) e
 		return fmt.Errorf("either name or display_label must be provided")
 	}
 
-	applicationsResponse, _, err := client.ApplicationsApi.ApplicationsList(context.Background(), "_id, name, displayName", "", nil)
+	applicationsResponse, _, err := client.ApplicationsApi.ApplicationsList(context.Background(), "_id, displayName, displayLabel", "", nil)
 
 	if err != nil {
 		return err
@@ -49,10 +50,9 @@ func dataSourceJumpCloudApplicationRead(d *schema.ResourceData, m interface{}) e
 	applications := applicationsResponse.Results
 
 	for _, application := range applications {
-		log.Printf("[DEBUG] Found application with name '%s' and display label '%s'", application.Name, application.DisplayName)
-		log.Printf("[DEBUG] Checking application with ID: %s, Name: %s, DisplayName: %s\n", application.Id, application.Name, application.DisplayName)
+		log.Printf("[DEBUG] Checking application with DisplayName: %s, DisplayLabel: %s\n", application.DisplayName, application.DisplayLabel)
 		
-		if (nameExists && application.Name == applicationName) || (displayLabelExists && application.DisplayName == displayLabel) {
+		if (nameExists && application.DisplayName == applicationName) || (displayLabelExists && application.DisplayLabel == displayLabel) {
 			d.SetId(application.Id)
 			return nil
 		}
