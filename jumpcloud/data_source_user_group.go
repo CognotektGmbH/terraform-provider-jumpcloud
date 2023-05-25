@@ -32,27 +32,20 @@ func dataSourceJumpCloudUserGroupRead(d *schema.ResourceData, m interface{}) err
 
 	filter := fmt.Sprintf(`{"name":"%s"}`, groupName)
 
-	page := 0
-	limit := 100 // Adjust the limit as per your requirement
+	groups, _, err := client.UserGroupsApi.GroupsUserList(context.Background(), "application/json", "application/json", map[string]interface{}{
+		"filter": filter,
+		"limit":  0, // No limit specified to retrieve all matching groups
+		"sort":   []string{},
+	})
+	if err != nil {
+		return err
+	}
 
-	for {
-		groups, _, err := client.UserGroupsApi.GroupsUserList(context.Background(), "_id, name", filter, nil)
-		if err != nil {
-			return err
+	for _, group := range groups {
+		if group.Name == groupName {
+			d.SetId(group.Id)
+			return nil
 		}
-
-		for _, group := range groups {
-			if group.Name == groupName {
-				d.SetId(group.Id)
-				return nil
-			}
-		}
-
-		if len(groups) < limit {
-			break
-		}
-
-		page++
 	}
 
 	return fmt.Errorf("No user group found with name: %s", groupName)
