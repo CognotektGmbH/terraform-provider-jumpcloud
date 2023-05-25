@@ -14,7 +14,7 @@ Use this data source to get information about a Jumpcloud User.
 
 ```terraform
 data "jumpcloud_user" "example" {
-  name = "user@example.com"
+  email = "user@example.com"
 }
 ```
 

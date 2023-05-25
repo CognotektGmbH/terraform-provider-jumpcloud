@@ -2,6 +2,7 @@ package jumpcloud
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -27,62 +28,57 @@ func dataSourceJumpCloudUser() *schema.Resource {
 	}
 }
 
-func getUserDetails(client *jcapiv1.APIClient, userID, email, username string) (*jcapiv1.Systemuserreturn, error) {
+func getUserDetails(client *jcapiv1.APIClient, email string) (*jcapiv1.Systemuserreturn, error) {
 	ctx := context.TODO()
-	res, _, err := client.SystemusersApi.SystemusersList(ctx, "", "", nil)
 
+	contentType := "application/json"
+	accept := "application/json"
+
+	filterJson := fmt.Sprintf("[{\"email\": \"%s\"}]", email)
+	var filter interface{}
+	json.Unmarshal([]byte(filterJson), &filter)
+	
+	optionals := map[string]interface{}{
+		"body": jcapiv1.Search{
+			Filter: &filter,
+		},
+	}
+	
+	
+
+	res, _, err := client.SearchApi.SearchSystemusersPost(ctx, contentType, accept, optionals)
 	if err != nil {
 		return nil, err
 	}
 
-	var user *jcapiv1.Systemuserreturn
-
-	if userID != "" {
-		for _, u := range res.Results {
-			if u.Id == userID {
-				user = &u
-				break
-			}
-		}
-	} else if email != "" {
-		for _, u := range res.Results {
-			if u.Email == email {
-				user = &u
-				break
-			}
-		}
-	} else if username != "" {
-		for _, u := range res.Results {
-			if u.Username == username {
-				user = &u
-				break
-			}
-		}
+	// Check if user is found
+	if len(res.Results) == 0 {
+		return nil, fmt.Errorf("no user found with the given email: %s", email)
 	}
 
-	if user == nil {
-		return nil, fmt.Errorf("no user found with the given query")
-	}
+	// Return the first user found
+	user := res.Results[0]
 
-	return user, nil
+	return &user, nil
 }
 
+
 func dataSourceJumpCloudUserRead(d *schema.ResourceData, m interface{}) error {
-    configv1 := convertV2toV1Config(m.(*jcapiv2.Configuration))
-    client := jcapiv1.NewAPIClient(configv1)
-    userEmail := d.Get("email").(string)
+	configv1 := convertV2toV1Config(m.(*jcapiv2.Configuration))
+	client := jcapiv1.NewAPIClient(configv1)
+	userEmail := d.Get("email").(string)
 
-    // Use the getUserDetails function to query user details using the userEmail
-    user, err := getUserDetails(client, "", userEmail, "")
+	// Use the getUserDetails function to query user details using the userEmail
+	user, err := getUserDetails(client, userEmail)
 
-    // If an error occurs or no user is found, return an error
+	// If an error occurs or no user is found, return an error
 	if err != nil {
 		return errors.New("user not found")
 	}
 
-    // Set the user ID in the Terraform resource data object
-    d.SetId(user.Id)
-    d.Set("id", user.Id)
+	// Set the user ID in the Terraform resource data object
+	d.SetId(user.Id)
+	d.Set("id", user.Id)
 
-    return nil
+	return nil
 }
