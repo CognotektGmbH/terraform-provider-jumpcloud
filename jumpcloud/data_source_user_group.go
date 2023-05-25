@@ -30,17 +30,20 @@ func dataSourceJumpCloudUserGroupRead(d *schema.ResourceData, m interface{}) err
 
 	groupName := d.Get("group_name").(string)
 
-	userGroups, _, err := client.UserGroupsApi.GroupsUserList(context.Background(), "_id, name", "", nil)
+	filter := fmt.Sprintf(`{"name":"%s"}`, groupName)
+
+	userGroups, _, err := client.UserGroupsApi.GroupsUserList(context.Background(), "_id, name", filter, nil)
 	if err != nil {
 		return err
 	}
 
-	for _, userGroup := range userGroups {
-		if userGroup.Name == groupName {
-			d.SetId(userGroup.Id)
-			return nil
-		}
+	if len(userGroups) == 0 {
+		return fmt.Errorf("No user group found with name: %s", groupName)
+	} else if len(userGroups) > 1 {
+		return fmt.Errorf("Multiple user groups found with name: %s", groupName)
 	}
 
-	return fmt.Errorf("No user group found with name: %s", groupName)
+	d.SetId(userGroups[0].Id)
+
+	return nil
 }
