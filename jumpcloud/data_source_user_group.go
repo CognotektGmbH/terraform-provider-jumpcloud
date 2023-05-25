@@ -37,13 +37,12 @@ func dataSourceJumpCloudUserGroupRead(d *schema.ResourceData, m interface{}) err
 		return err
 	}
 
-	if len(userGroups) == 0 {
-		return fmt.Errorf("No user group found with name: %s", groupName)
-	} else if len(userGroups) > 1 {
-		return fmt.Errorf("Multiple user groups found with name: %s", groupName)
+	for _, userGroup := range userGroups {
+		if userGroup.Name == groupName {
+			d.SetId(userGroup.Id)
+			return nil
+		}
 	}
 
-	d.SetId(userGroups[0].Id)
-
-	return nil
+	return fmt.Errorf("No user group found with name: %s", groupName)
 }
