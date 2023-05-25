@@ -32,9 +32,11 @@ func dataSourceJumpCloudUserGroupRead(d *schema.ResourceData, m interface{}) err
 
 	filter := fmt.Sprintf(`{"name":"%s"}`, groupName)
 
+	limit := int32(0) // No limit specified to retrieve all matching groups
+
 	groups, _, err := client.UserGroupsApi.GroupsUserList(context.Background(), "application/json", "application/json", map[string]interface{}{
 		"filter": filter,
-		"limit":  0, // No limit specified to retrieve all matching groups
+		"limit":  limit,
 		"sort":   []string{},
 	})
 	if err != nil {
