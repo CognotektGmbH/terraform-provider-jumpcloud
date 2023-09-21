@@ -2,7 +2,9 @@ package jumpcloud
 
 import (
 	"context"
+	"fmt"
 	"strings"
+	"time"
 
 	jcapiv2 "github.com/TheJumpCloud/jcapi-go/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -10,22 +12,25 @@ import (
 
 func resourceUserGroupMembership() *schema.Resource {
 	return &schema.Resource{
+		Description:   "Provides a resource for managing user group memberships.",
 		Create: resourceUserGroupMembershipCreate,
 		Read:   resourceUserGroupMembershipRead,
 		// We must not have an update routine as the association cannot be updated.
 		// Any change in one of the elements forces a recreation of the resource
-		Update: nil,
+		Update:        nil,
 		Delete: resourceUserGroupMembershipDelete,
 		Schema: map[string]*schema.Schema{
 			"userid": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Description: "The ID of the `resource_user` object.",
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
 			},
 			"groupid": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Description: "The ID of the `resource_user_group` object.",
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
 			},
 		},
 		Importer: &schema.ResourceImporter{
@@ -40,8 +45,8 @@ func resourceUserGroupMembership() *schema.Resource {
 // we can derive both values during our import process
 func userGroupMembershipImporter(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 	s := strings.Split(d.Id(), "/")
-	d.Set("groupid", s[0])
-	d.Set("userid", s[1])
+	_ = d.Set("groupid", s[0])
+	_ = d.Set("userid", s[1])
 	return []*schema.ResourceData{d}, nil
 }
 
@@ -61,7 +66,7 @@ func modifyUserGroupMembership(client *jcapiv2.APIClient,
 	_, err := client.UserGroupMembersMembershipApi.GraphUserGroupMembersPost(
 		context.TODO(), d.Get("groupid").(string), "", "", req)
 
-	return err
+		return err
 }
 
 func resourceUserGroupMembershipCreate(d *schema.ResourceData, m interface{}) error {
@@ -79,30 +84,40 @@ func resourceUserGroupMembershipRead(d *schema.ResourceData, m interface{}) erro
 	config := m.(*jcapiv2.Configuration)
 	client := jcapiv2.NewAPIClient(config)
 
-	optionals := map[string]interface{}{
-		"groupId": d.Get("groupid").(string),
-		"limit":   int32(100),
-	}
+	for i := 0; i < 20; i++ { // Prevent infite loop
 
-	graphconnect, _, err := client.UserGroupMembersMembershipApi.GraphUserGroupMembersList(
-		context.TODO(), d.Get("groupid").(string), "", "", optionals)
-	if err != nil {
-		return err
-	}
+		optionals := map[string]interface{}{
+			"groupId": d.Get("groupid").(string),
+			"limit":   int32(100),
+			"skip":     int32(i * 100),
+		}
 
-	// The Userids are hidden in a super-complex construct, see
-	// https://github.com/TheJumpCloud/jcapi-go/blob/master/v2/docs/GraphConnection.md
-	for _, v := range graphconnect {
-		if v.To.Id == d.Get("userid") {
-			// Found - As we not have a JC-ID for the membership we simply store
-			// the concatenation of group ID and user ID as our membership ID
-			d.SetId(d.Get("groupid").(string) + "/" + d.Get("userid").(string))
-			return nil
+		graphconnect, _, err := client.UserGroupMembersMembershipApi.GraphUserGroupMembersList(
+			context.TODO(), d.Get("groupid").(string), "", "", optionals)
+		if err != nil {
+			return err
+		}
+
+		// The Userids are hidden in a super-complex construct, see
+		// https://github.com/TheJumpCloud/jcapi-go/blob/master/v2/docs/GraphConnection.md
+		for _, v := range graphconnect {
+			if v.To.Id == d.Get("userid") {
+				// Found - As we not have a JC-ID for the membership we simply store
+				// the concatenation of group ID and user ID as our membership ID
+				d.SetId(d.Get("groupid").(string) + "/" + d.Get("userid").(string))
+				return nil
+			}
+		}
+
+		if len(graphconnect) < 100 {
+			break
+		} else {
+			time.Sleep(100 * time.Millisecond)
 		}
 	}
-	// Element does not exist in actual Infrastructure, hence unsetting the ID
-	d.SetId("")
-	return nil
+
+	// Instead of unsetting the ID, return an error to let Terraform retry
+	return fmt.Errorf("User ID %s not found in group ID %s", d.Get("userid").(string), d.Get("groupid").(string))
 }
 
 func resourceUserGroupMembershipDelete(d *schema.ResourceData, m interface{}) error {
