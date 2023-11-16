@@ -44,10 +44,54 @@ func resourceUserGroupMembership() *schema.Resource {
 // artificial resource ID is simply the concatenation of user ID group ID seperated by  a '/',
 // we can derive both values during our import process
 func userGroupMembershipImporter(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	s := strings.Split(d.Id(), "/")
-	_ = d.Set("groupid", s[0])
-	_ = d.Set("userid", s[1])
-	return []*schema.ResourceData{d}, nil
+    s := strings.Split(d.Id(), "/")
+    _ = d.Set("groupid", s[0])
+    _ = d.Set("userid", s[1])
+
+    config := m.(*jcapiv2.Configuration)
+    client := jcapiv2.NewAPIClient(config)
+
+    // Check if the user is already a member of the group
+    isMember, err := checkUserGroupMembership(client, d.Get("groupid").(string), d.Get("userid").(string))
+    if err != nil {
+        return nil, err
+    }
+
+    if isMember {
+        d.SetId(d.Get("groupid").(string) + "/" + d.Get("userid").(string))
+        return []*schema.ResourceData{d}, nil
+    }
+
+    return nil, fmt.Errorf("User %s is not a member of group %s", d.Get("userid").(string), d.Get("groupid").(string))
+}
+
+func checkUserGroupMembership(client *jcapiv2.APIClient, groupID, userID string) (bool, error) {
+    for i := 0; ; i++ {
+        optionals := map[string]interface{}{
+            "groupId": groupID,
+            "limit":   int32(100),
+            "skip":    int32(i * 100),
+        }
+
+        graphconnect, _, err := client.UserGroupMembersMembershipApi.GraphUserGroupMembersList(
+            context.TODO(), groupID, "", "", optionals)
+        if err != nil {
+            return false, err
+        }
+
+        for _, v := range graphconnect {
+            if v.To.Id == userID {
+                return true, nil
+            }
+        }
+
+        // Break the loop if the number of members in the current batch is less than 100
+        if len(graphconnect) < 100 {
+            break
+        }
+    }
+
+    return false, nil
 }
 
 func modifyUserGroupMembership(client *jcapiv2.APIClient,

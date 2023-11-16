@@ -42,4 +42,9 @@ resource "jumpcloud_user_group_membership" "example" {
 
 - `id` (String) The ID of this resource.
 
+### Import
+User group memberships can be imported using the concatenated groupid and userid, separated by a '/'. For example:
+```
+terraform import jumpcloud_user_group_membership.example_membership groupid/userid
+```
 
